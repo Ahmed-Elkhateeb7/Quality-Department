@@ -1,7 +1,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Employee, UserRole } from '../types';
-import { Search, UserPlus, Microscope, ShieldCheck, Briefcase, Trash2, Mail, Phone, Calendar, Edit2, X, Users, CheckCircle, Upload, Camera, Fingerprint, Info, Contact2, Settings2, Hash } from 'lucide-react';
+import { Search, UserPlus, Microscope, ShieldCheck, Briefcase, Trash2, Mail, Phone, Calendar, Edit2, X, Users, CheckCircle, Upload, Camera, Fingerprint, Info, Contact2, Settings2, Hash, IdCard } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface TeamProps {
@@ -153,7 +153,7 @@ export const Team: React.FC<TeamProps> = ({ team, setTeam, requestAuth, role }) 
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         <AnimatePresence>
             {filteredTeam.map((member) => (
                 <motion.div
@@ -162,79 +162,112 @@ export const Team: React.FC<TeamProps> = ({ team, setTeam, requestAuth, role }) 
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 relative group overflow-hidden"
+                    className="bg-white rounded-[2.5rem] p-0 shadow-sm border border-gray-100 hover:shadow-2xl transition-all duration-300 relative group overflow-hidden flex flex-col"
                 >
-                    <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-royal-50 to-white -z-0" />
-                    
-                    <div className="relative z-10 flex flex-col items-center text-center">
-                        <div className="w-24 h-24 rounded-full p-1 bg-white border-2 border-royal-100 shadow-lg mb-4 relative">
-                            <img src={member.image} alt={member.name} className="w-full h-full rounded-full object-cover" />
-                            <div className="absolute bottom-0 right-0 bg-emerald-500 w-6 h-6 rounded-full border-4 border-white" title="Active"></div>
-                        </div>
+                    {/* Header Background */}
+                    <div className="h-40 bg-gradient-to-br from-royal-800 to-royal-600 relative">
+                        {/* Decorative pattern */}
+                        <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
                         
-                        <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
-                        <p className="text-royal-600 font-medium text-sm mb-4">{member.role}</p>
-
-                        <div className="flex items-center gap-2 px-3 py-1 bg-gray-50 rounded-full border border-gray-200 mb-6">
-                            {getDepartmentIcon(member.department)}
-                            <span className="text-xs font-bold text-gray-600">{getDepartmentLabel(member.department)}</span>
-                        </div>
-
-                        <div className="w-full space-y-3 border-t border-gray-100 pt-4">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-400 flex items-center gap-2">
-                                    <Mail className="w-4 h-4" /> البريد
-                                </span>
-                                <span className="font-medium text-gray-700 truncate max-w-[150px]">{member.email}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-400 flex items-center gap-2">
-                                    <Phone className="w-4 h-4" /> الهاتف
-                                </span>
-                                <span className="font-medium text-gray-700 dir-ltr">{member.phone}</span>
-                            </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-400 flex items-center gap-2">
-                                    <Calendar className="w-4 h-4" /> الانضمام
-                                </span>
-                                <span className="font-medium text-gray-700">{member.joinedDate}</span>
-                            </div>
-                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-gray-400 flex items-center gap-2">
-                                    <Hash className="w-4 h-4" /> كود الموظف
-                                </span>
-                                <span className="font-mono bg-gray-100 px-2 py-0.5 rounded text-gray-600">{member.employeeCode || member.id}</span>
-                            </div>
-                        </div>
-
-                        {/* ID Card Badge Effect */}
-                        {member.stampData && (
-                            <div className="mt-4 w-full bg-royal-50 p-2 rounded-lg border border-dashed border-royal-200 flex items-center justify-center gap-2">
-                                <CheckCircle className="w-4 h-4 text-royal-600" />
-                                <span className="text-xs font-bold text-royal-700">ختم الجودة: {member.stampData}</span>
+                         {/* Actions - Only visible to Admin */}
+                        {role === 'admin' && (
+                            <div className="absolute top-4 left-4 flex gap-2 z-20">
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); handleOpenEdit(member); }}
+                                    className="p-2 bg-white/20 backdrop-blur-md text-white hover:bg-white hover:text-royal-600 rounded-lg transition-colors shadow-lg"
+                                    title="تعديل البيانات"
+                                >
+                                    <Edit2 className="w-4 h-4" />
+                                </button>
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); handleDelete(member.id); }}
+                                    className="p-2 bg-white/20 backdrop-blur-md text-white hover:bg-red-500 hover:text-white rounded-lg transition-colors shadow-lg"
+                                    title="حذف الموظف"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
                             </div>
                         )}
                     </div>
-
-                    {/* Actions - Only visible to Admin */}
-                    {role === 'admin' && (
-                        <div className="absolute top-4 left-4 flex flex-col gap-2 z-20">
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); handleOpenEdit(member); }}
-                                className="p-2 bg-white text-gray-600 hover:text-royal-600 rounded-lg shadow-md border border-gray-100 hover:bg-royal-50 transition-colors"
-                                title="تعديل البيانات"
-                            >
-                                <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); handleDelete(member.id); }}
-                                className="p-2 bg-white text-gray-600 hover:text-red-600 rounded-lg shadow-md border border-gray-100 hover:bg-red-50 transition-colors"
-                                title="حذف الموظف"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+                    
+                    <div className="relative px-6 pb-8 flex-1 flex flex-col">
+                        {/* Profile Image - Large Size */}
+                        <div className="relative -mt-24 mb-6 self-center">
+                            <div className="w-44 h-44 rounded-full p-2 bg-white shadow-2xl ring-4 ring-gray-50">
+                                <img src={member.image} alt={member.name} className="w-full h-full rounded-full object-cover bg-gray-100 shadow-inner" />
+                            </div>
+                            <div className="absolute bottom-4 right-4 bg-emerald-500 w-8 h-8 rounded-full border-[3px] border-white shadow-md flex items-center justify-center" title="Active">
+                                <CheckCircle className="w-5 h-5 text-white" />
+                            </div>
                         </div>
-                    )}
+                        
+                        {/* Basic Info */}
+                        <div className="text-center mb-8">
+                            <h3 className="text-2xl font-black text-gray-900 mb-2">{member.name}</h3>
+                            <p className="text-royal-600 font-bold text-lg mb-4">{member.role}</p>
+
+                            <div className="inline-flex items-center gap-2 px-6 py-2 bg-royal-50 rounded-full border border-royal-100">
+                                {getDepartmentIcon(member.department)}
+                                <span className="text-sm font-bold text-gray-700">{getDepartmentLabel(member.department)}</span>
+                            </div>
+                        </div>
+
+                        {/* Detailed Info Grid */}
+                        <div className="flex-1 space-y-4">
+                            {/* Email - Full Width */}
+                            <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 flex items-center gap-4 hover:bg-royal-50 transition-colors group/item">
+                                <div className="p-3 bg-white text-royal-600 rounded-xl shadow-sm group-hover/item:bg-royal-600 group-hover/item:text-white transition-colors shrink-0">
+                                    <Mail className="w-5 h-5" />
+                                </div>
+                                <div className="overflow-hidden">
+                                    <p className="text-xs font-bold text-gray-400 mb-0.5">البريد الإلكتروني</p>
+                                    <p className="text-sm font-bold text-gray-800 break-words leading-tight">{member.email}</p>
+                                </div>
+                            </div>
+
+                             {/* Phone & Join Date Grid */}
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:bg-royal-50 transition-colors group/item">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-white text-emerald-600 rounded-lg shadow-sm group-hover/item:bg-emerald-600 group-hover/item:text-white transition-colors">
+                                            <Phone className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-400">الهاتف</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-800 dir-ltr">{member.phone}</p>
+                                </div>
+                                
+                                <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 hover:bg-royal-50 transition-colors group/item">
+                                    <div className="flex items-center gap-3 mb-2">
+                                        <div className="p-2 bg-white text-amber-600 rounded-lg shadow-sm group-hover/item:bg-amber-600 group-hover/item:text-white transition-colors">
+                                            <Calendar className="w-4 h-4" />
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-400">تاريخ الانضمام</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-gray-800">{member.joinedDate}</p>
+                                </div>
+                             </div>
+
+                             {/* Codes Grid */}
+                             <div className="grid grid-cols-2 gap-4">
+                                <div className="bg-blue-50/80 p-4 rounded-2xl border border-blue-100 hover:bg-blue-100 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <IdCard className="w-4 h-4 text-blue-600" />
+                                        <span className="text-xs font-bold text-blue-600">كود الموظف</span>
+                                    </div>
+                                    <p className="text-base font-black text-blue-800 font-mono tracking-wider">{member.employeeCode || '-'}</p>
+                                </div>
+
+                                <div className="bg-emerald-50/80 p-4 rounded-2xl border border-emerald-100 hover:bg-emerald-100 transition-colors">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                                        <span className="text-xs font-bold text-emerald-600">ختم الجودة</span>
+                                    </div>
+                                    <p className="text-base font-black text-emerald-800 font-mono tracking-wider">{member.stampData || 'غير معين'}</p>
+                                </div>
+                             </div>
+                        </div>
+                    </div>
                 </motion.div>
             ))}
         </AnimatePresence>
@@ -262,18 +295,18 @@ export const Team: React.FC<TeamProps> = ({ team, setTeam, requestAuth, role }) 
                     <div className="flex flex-col items-center mb-8">
                         <div 
                             onClick={() => fileInputRef.current?.click()}
-                            className="w-32 h-32 rounded-full border-4 border-dashed border-gray-200 hover:border-royal-500 cursor-pointer relative overflow-hidden group transition-all"
+                            className="w-40 h-40 rounded-full border-4 border-dashed border-gray-200 hover:border-royal-500 cursor-pointer relative overflow-hidden group transition-all"
                         >
                             {formData.image ? (
                                 <img src={formData.image} className="w-full h-full object-cover" alt="Profile" />
                             ) : (
                                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 group-hover:text-royal-500 group-hover:bg-royal-50">
-                                    <Camera className="w-8 h-8 mb-1" />
-                                    <span className="text-[10px] font-bold">رفع صورة</span>
+                                    <Camera className="w-10 h-10 mb-2" />
+                                    <span className="text-xs font-bold">رفع صورة</span>
                                 </div>
                             )}
                             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Upload className="w-8 h-8 text-white" />
+                                <Upload className="w-10 h-10 text-white" />
                             </div>
                         </div>
                         <input 
@@ -360,6 +393,15 @@ export const Team: React.FC<TeamProps> = ({ team, setTeam, requestAuth, role }) 
                                 onChange={(e) => setFormData({...formData, phone: e.target.value})}
                                 className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-royal-500 outline-none text-left"
                                 placeholder="+966..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold text-gray-700">تاريخ التعيين</label>
+                            <input 
+                                type="date"
+                                value={formData.joinedDate}
+                                onChange={(e) => setFormData({...formData, joinedDate: e.target.value})}
+                                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-royal-500 outline-none text-right"
                             />
                         </div>
                     </div>
