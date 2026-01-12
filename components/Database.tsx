@@ -10,6 +10,7 @@ interface DatabaseProps {
     team: any[];
     documents: any[];
     kpiData: any[];
+    companySettings: any;
   };
   onImport: (fullData: any) => void;
   onReset: () => void;
