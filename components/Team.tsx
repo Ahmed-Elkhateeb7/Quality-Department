@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Employee, UserRole } from '../types';
 import { Search, UserPlus, Microscope, ShieldCheck, Briefcase, Trash2, Mail, Phone, Calendar, Edit2, X, Users, CheckCircle, Upload, Camera, Fingerprint, Info, Contact2, Settings2, Hash, IdCard } from 'lucide-react';
@@ -40,9 +39,39 @@ export const Team: React.FC<TeamProps> = ({ team, setTeam, requestAuth, role }) 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Compress image
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          const MAX_SIZE = 600; // Smaller size for profile pics
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Compress
+          const compressed = canvas.toDataURL('image/jpeg', 0.6);
+          setFormData(prev => ({ ...prev, image: compressed }));
+        };
       };
       reader.readAsDataURL(file);
     }

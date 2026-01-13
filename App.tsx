@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, Suspense } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { PasswordModal } from './components/PasswordModal';
@@ -91,9 +90,23 @@ function App() {
     return saved ? JSON.parse(saved) : INITIAL_COMPANY_SETTINGS;
   });
 
-  // Sync with LocalStorage
-  useEffect(() => localStorage.setItem('tqm_products', JSON.stringify(products)), [products]);
-  useEffect(() => localStorage.setItem('tqm_team', JSON.stringify(team)), [team]);
+  // Sync with LocalStorage with error handling
+  useEffect(() => {
+    try {
+      localStorage.setItem('tqm_products', JSON.stringify(products));
+    } catch (e) {
+      alert("تنبيه: مساحة التخزين ممتلئة. لم يتم حفظ التغييرات الأخيرة. يرجى حذف بعض المنتجات القديمة أو تقليل حجم الصور.");
+    }
+  }, [products]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('tqm_team', JSON.stringify(team));
+    } catch (e) {
+      alert("تنبيه: مساحة التخزين ممتلئة. لم يتم حفظ بيانات الفريق.");
+    }
+  }, [team]);
+
   useEffect(() => localStorage.setItem('tqm_documents', JSON.stringify(documents)), [documents]);
   useEffect(() => localStorage.setItem('tqm_kpiData', JSON.stringify(kpiData)), [kpiData]);
   useEffect(() => localStorage.setItem('tqm_company', JSON.stringify(companySettings)), [companySettings]);

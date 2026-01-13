@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { Product, UserRole } from '../types';
 import { Plus, Search, Edit2, Trash2, X, Upload, Check, AlertTriangle, Filter, FileDown, Eye, Info, Package, ShieldCheck, Factory } from 'lucide-react';
@@ -45,9 +44,43 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Create image object to handle resizing/compression
+      const img = document.createElement('img');
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, image: reader.result as string }));
+      
+      reader.onload = (event) => {
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          // Create canvas for compression
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Max dimensions (800px) to save space
+          const MAX_SIZE = 800;
+          let width = img.width;
+          let height = img.height;
+          
+          if (width > height) {
+            if (width > MAX_SIZE) {
+              height *= MAX_SIZE / width;
+              width = MAX_SIZE;
+            }
+          } else {
+            if (height > MAX_SIZE) {
+              width *= MAX_SIZE / height;
+              height = MAX_SIZE;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // Draw and compress to JPEG with 0.7 quality
+          ctx?.drawImage(img, 0, 0, width, height);
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          
+          setFormData(prev => ({ ...prev, image: compressedBase64 }));
+        };
       };
       reader.readAsDataURL(file);
     }
