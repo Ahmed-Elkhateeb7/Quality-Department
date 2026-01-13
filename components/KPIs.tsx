@@ -70,7 +70,15 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (newData.month && newData.year) {
-        setData(prev => [...prev, newData as KPIData]);
+        setData(prev => {
+            // Remove any existing entry for the same month and year to avoid duplicates
+            const filteredPrev = prev.filter(
+                item => !(item.month === newData.month && item.year === newData.year)
+            );
+            // Append the new data
+            return [...filteredPrev, newData as KPIData];
+        });
+        
         setIsModalOpen(false);
         setNewData({
             month: ARABIC_MONTHS[new Date().getMonth()],
