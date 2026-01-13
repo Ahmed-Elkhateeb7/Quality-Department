@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { KPIData, UserRole } from '../types';
 import { 
@@ -461,11 +460,11 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                         <div className="grid grid-cols-1 gap-8 h-full justify-center">
                             <div className="space-y-3">
                                 <label className="text-sm font-black text-slate-600">PPM داخلي (Internal)</label>
-                                <input type="number" placeholder="نسبة الهالك الداخلي لكل مليون" onChange={(e) => setNewData({...newData, internalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-rose-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
+                                <input type="number" step="0.01" placeholder="نسبة الهالك الداخلي لكل مليون" onChange={(e) => setNewData({...newData, internalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-rose-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
                             </div>
                             <div className="space-y-3">
                                 <label className="text-sm font-black text-slate-600">PPM خارجي (External)</label>
-                                <input type="number" placeholder="نسبة الهالك الخارجي لكل مليون" onChange={(e) => setNewData({...newData, externalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-indigo-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
+                                <input type="number" step="0.01" placeholder="نسبة الهالك الخارجي لكل مليون" onChange={(e) => setNewData({...newData, externalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-indigo-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
                             </div>
                         </div>
                     </div>
