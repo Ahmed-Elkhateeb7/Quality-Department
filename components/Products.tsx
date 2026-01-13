@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import { Product, UserRole } from '../types';
 import { Plus, Search, Edit2, Trash2, X, Upload, Check, AlertTriangle, Filter, FileDown, Eye, Info, Package, ShieldCheck, Factory } from 'lucide-react';
@@ -54,8 +55,8 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Target 400px for maximum storage efficiency to support 100+ items
-          const MAX_SIZE = 400; 
+          // Using 800px now that we have 1GB storage. This keeps quality high while still managing data efficiently.
+          const MAX_SIZE = 800; 
           let width = img.width;
           let height = img.height;
           
@@ -75,8 +76,8 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
           canvas.height = height;
           
           ctx?.drawImage(img, 0, 0, width, height);
-          // Compress significantly (0.5) to ensure LocalStorage longevity
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
+          // 0.8 quality for professional look since storage is no longer a major bottleneck
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.8);
           
           setFormData(prev => ({ ...prev, image: compressedBase64 }));
         };
@@ -123,7 +124,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
       const newProduct: Product = {
         id: Date.now().toString(),
         ...(formData as Omit<Product, 'id'>),
-        image: formData.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&auto=format&fit=crop&q=60'
+        image: formData.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=60'
       };
       setProducts(prev => [newProduct, ...prev]);
     }
