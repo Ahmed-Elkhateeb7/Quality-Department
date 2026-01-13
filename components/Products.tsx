@@ -18,7 +18,6 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   
-  // Form State
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     specs: '',
@@ -30,11 +29,13 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Extract unique manufacturers for the filter dropdown
   const manufacturers = Array.from(new Set(products.map(p => p.manufacturer).filter(Boolean))) as string[];
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.includes(searchTerm) || p.specs.includes(searchTerm) || (p.manufacturer && p.manufacturer.includes(searchTerm));
+    const nameMatch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const specMatch = p.specs.toLowerCase().includes(searchTerm.toLowerCase());
+    const mfrMatch = (p.manufacturer || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = nameMatch || specMatch || mfrMatch;
     const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
     const matchesManufacturer = filterManufacturer === 'all' || p.manufacturer === filterManufacturer;
     
@@ -44,19 +45,17 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Create image object to handle resizing/compression
-      const img = document.createElement('img');
+      const img = new Image();
       const reader = new FileReader();
       
       reader.onload = (event) => {
         img.src = event.target?.result as string;
         img.onload = () => {
-          // Create canvas for compression
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
           
-          // Max dimensions (800px) to save space
-          const MAX_SIZE = 800;
+          // Target 400px for maximum storage efficiency to support 100+ items
+          const MAX_SIZE = 400; 
           let width = img.width;
           let height = img.height;
           
@@ -75,9 +74,9 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
           canvas.width = width;
           canvas.height = height;
           
-          // Draw and compress to JPEG with 0.7 quality
           ctx?.drawImage(img, 0, 0, width, height);
-          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          // Compress significantly (0.5) to ensure LocalStorage longevity
+          const compressedBase64 = canvas.toDataURL('image/jpeg', 0.5);
           
           setFormData(prev => ({ ...prev, image: compressedBase64 }));
         };
@@ -124,7 +123,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
       const newProduct: Product = {
         id: Date.now().toString(),
         ...(formData as Omit<Product, 'id'>),
-        image: formData.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=800&auto=format&fit=crop&q=60'
+        image: formData.image || 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=400&auto=format&fit=crop&q=60'
       };
       setProducts(prev => [newProduct, ...prev]);
     }
@@ -158,8 +157,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
   };
 
   const handleExportCSV = () => {
-    const headers = ['ID', 'اسم المنتج', 'الشركة المصنعة', 'المواصفات', 'العيوب', 'الحالة', 'رابط الصورة'];
-    
+    const headers = ['ID', 'اسم المنتج', 'الشركة المصنعة', 'المواصفات', 'العيوب', 'الحالة'];
     const csvContent = [
       headers.join(','),
       ...filteredProducts.map(product => [
@@ -168,8 +166,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
         `"${(product.manufacturer || '').replace(/"/g, '""')}"`,
         `"${product.specs.replace(/"/g, '""')}"`,
         `"${product.defects.replace(/"/g, '""')}"`,
-        getStatusText(product.status),
-        `"${product.image}"`
+        getStatusText(product.status)
       ].join(','))
     ].join('\n');
 
@@ -177,7 +174,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `products_export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `tqm_products_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -188,7 +185,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">إدارة المنتجات</h2>
-          <p className="text-gray-500">مراقبة جودة خطوط الإنتاج والمواصفات</p>
+          <p className="text-gray-500">مراقبة جودة خطوط الإنتاج والمواصفات ({products.length} منتج)</p>
         </div>
         
         <div className="flex gap-3">
@@ -211,21 +208,19 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
         </div>
       </div>
 
-      {/* Controls */}
       <div className="flex flex-col md:flex-row gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
         <div className="flex-1 flex gap-2">
             <div className="relative flex-1">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input 
                 type="text" 
-                placeholder="بحث عن منتج برقم التشغيلة أو الاسم..." 
+                placeholder="بحث عن منتج..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-12 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-royal-500 outline-none transition-all"
                 />
             </div>
             
-            {/* Manufacturer Filter Dropdown */}
             <div className="relative w-48 hidden md:block">
                  <Factory className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
                  <select 
@@ -259,25 +254,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
         </div>
       </div>
 
-      {/* Mobile Manufacturer Filter (Visible only on small screens) */}
-      <div className="md:hidden">
-          <div className="relative">
-                 <Factory className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-                 <select 
-                    value={filterManufacturer}
-                    onChange={(e) => setFilterManufacturer(e.target.value)}
-                    className="w-full pl-4 pr-10 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-royal-500 outline-none appearance-none cursor-pointer text-sm font-semibold text-gray-600 shadow-sm"
-                 >
-                    <option value="all">كل الشركات المصنعة</option>
-                    {manufacturers.map((m) => (
-                        <option key={m} value={m}>{m}</option>
-                    ))}
-                 </select>
-            </div>
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         <AnimatePresence mode='popLayout'>
           {filteredProducts.map((product) => (
             <motion.div 
@@ -286,69 +263,61 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               layout
-              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300"
+              className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-xl transition-all duration-300 flex flex-col h-full"
             >
-              <div className="relative h-48 overflow-hidden bg-gray-100">
+              <div className="relative h-40 overflow-hidden bg-gray-100 shrink-0">
                 <img 
                   src={product.image} 
                   alt={product.name} 
+                  loading="lazy"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <div className="absolute top-3 right-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold border shadow-sm ${getStatusColor(product.status)}`}>
+                <div className="absolute top-2 right-2">
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shadow-sm ${getStatusColor(product.status)}`}>
                     {getStatusText(product.status)}
                   </span>
                 </div>
               </div>
               
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 leading-tight">{product.name}</h3>
-                </div>
+              <div className="p-4 flex flex-col flex-1">
+                <h3 className="text-md font-bold text-gray-900 leading-tight mb-1 truncate">{product.name}</h3>
+                
                 {product.manufacturer && (
-                    <div className="flex items-center gap-1.5 mb-3">
-                        <Factory className="w-3.5 h-3.5 text-gray-400" />
-                        <span className="text-xs font-medium text-gray-500">{product.manufacturer}</span>
+                    <div className="flex items-center gap-1 mb-2">
+                        <Factory className="w-3 h-3 text-gray-400" />
+                        <span className="text-[10px] font-medium text-gray-500 truncate">{product.manufacturer}</span>
                     </div>
                 )}
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-start gap-2">
-                     <span className="text-xs font-semibold text-gray-500 bg-gray-50 px-2 py-0.5 rounded">المواصفات:</span>
-                     <p className="text-sm text-gray-600 line-clamp-2">{product.specs}</p>
-                  </div>
+                <div className="flex-1 space-y-2 mb-3">
+                  <p className="text-xs text-gray-600 line-clamp-2">{product.specs}</p>
                   {product.defects && (
-                    <div className="flex items-start gap-2">
-                       <span className="text-xs font-semibold text-red-500 bg-red-50 px-2 py-0.5 rounded">العيوب:</span>
-                       <p className="text-sm text-red-600 line-clamp-1">{product.defects}</p>
-                    </div>
+                    <p className="text-xs text-red-600 line-clamp-1 bg-red-50 p-1 rounded font-medium border border-red-100">{product.defects}</p>
                   )}
                 </div>
 
-                <div className="flex gap-2 pt-4 border-t border-gray-100">
+                <div className="flex gap-2 pt-3 border-t border-gray-50">
                   <button 
                     onClick={() => handleOpenView(product)}
-                    className="flex-1 py-2 bg-gray-50 text-royal-600 rounded-lg hover:bg-royal-100 transition-colors text-sm font-semibold flex items-center justify-center gap-1"
-                    title="عرض التفاصيل"
+                    className="flex-1 py-1.5 bg-gray-50 text-royal-600 rounded-lg hover:bg-royal-100 transition-colors text-xs font-semibold flex items-center justify-center gap-1"
                   >
-                    <Eye className="w-4 h-4" />
+                    <Eye className="w-3 h-3" />
                     عرض
                   </button>
                   {role === 'admin' && (
                     <>
                     <button 
                         onClick={() => handleOpenEdit(product)}
-                        className="flex-1 py-2 bg-gray-50 text-gray-700 rounded-lg hover:bg-amber-50 hover:text-amber-700 transition-colors text-sm font-semibold flex items-center justify-center gap-1"
+                        className="flex-1 py-1.5 bg-gray-50 text-gray-700 rounded-lg hover:bg-amber-50 hover:text-amber-700 transition-colors text-xs font-semibold flex items-center justify-center gap-1"
                     >
-                        <Edit2 className="w-4 h-4" />
+                        <Edit2 className="w-3 h-3" />
                         تعديل
                     </button>
                     <button 
                         onClick={() => handleDelete(product.id)}
-                        className="flex-1 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors text-sm font-semibold flex items-center justify-center gap-1"
+                        className="p-1.5 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center justify-center"
                     >
-                        <Trash2 className="w-4 h-4" />
-                        حذف
+                        <Trash2 className="w-3 h-3" />
                     </button>
                     </>
                   )}
@@ -361,11 +330,11 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
 
       {filteredProducts.length === 0 && (
           <div className="text-center py-16 bg-white rounded-xl border border-dashed border-gray-300">
-              <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Filter className="w-10 h-10 text-gray-300" />
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Package className="w-8 h-8 text-gray-300" />
               </div>
-              <h3 className="text-lg font-bold text-gray-800 mb-1">لا توجد منتجات</h3>
-              <p className="text-gray-500">جرب تغيير الفلتر أو إضافة منتج جديد</p>
+              <h3 className="text-lg font-bold text-gray-800 mb-1">لا توجد نتائج</h3>
+              <p className="text-gray-500 text-sm">جرب تغيير معايير البحث أو إضافة منتجات جديدة</p>
           </div>
       )}
 
@@ -389,7 +358,6 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
             
             <div className="p-8 overflow-y-auto custom-scrollbar">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {/* Full Image Display */}
                   <div className="rounded-xl overflow-hidden border-2 border-gray-100 bg-gray-50 flex items-center justify-center p-2 min-h-[300px]">
                      <img 
                         src={viewingProduct.image} 
@@ -419,22 +387,15 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
                            <h4 className="text-sm font-black text-gray-700 mb-2 flex items-center gap-2">
                               <Info className="w-4 h-4 text-royal-600" /> المواصفات الفنية
                            </h4>
-                           <p className="text-gray-600 text-sm leading-relaxed">{viewingProduct.specs}</p>
+                           <p className="text-gray-600 text-sm leading-relaxed whitespace-pre-wrap">{viewingProduct.specs}</p>
                         </div>
 
-                        {viewingProduct.defects ? (
+                        {viewingProduct.defects && (
                            <div className="p-4 bg-red-50 rounded-xl border border-red-100">
                               <h4 className="text-sm font-black text-red-700 mb-2 flex items-center gap-2">
                                  <AlertTriangle className="w-4 h-4 text-red-600" /> ملاحظات العيوب
                               </h4>
                               <p className="text-red-600 text-sm leading-relaxed">{viewingProduct.defects}</p>
-                           </div>
-                        ) : (
-                           <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                              <h4 className="text-sm font-black text-emerald-700 mb-2 flex items-center gap-2">
-                                 <ShieldCheck className="w-4 h-4 text-emerald-600" /> حالة الجودة
-                              </h4>
-                              <p className="text-emerald-600 text-sm">المنتج مطابق للمواصفات ولا توجد عيوب مرصودة.</p>
                            </div>
                         )}
                      </div>
@@ -473,18 +434,17 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
             </div>
             
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Image Upload */}
               <div className="flex justify-center">
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full h-48 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-royal-500 hover:bg-royal-50 transition-all group overflow-hidden relative"
+                  className="w-full h-40 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-royal-500 hover:bg-royal-50 transition-all group overflow-hidden relative"
                 >
                   {formData.image ? (
                     <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
                   ) : (
                     <>
-                      <Upload className="w-10 h-10 text-gray-400 group-hover:text-royal-500 mb-2" />
-                      <p className="text-gray-500 text-sm group-hover:text-royal-600">اضغط لرفع صورة المنتج</p>
+                      <Upload className="w-8 h-8 text-gray-400 group-hover:text-royal-500 mb-2" />
+                      <p className="text-gray-500 text-sm group-hover:text-royal-600">رفع صورة (يتم ضغطها تلقائياً)</p>
                     </>
                   )}
                   <input 
@@ -505,7 +465,7 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
                     value={formData.name}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-royal-500 outline-none"
-                    placeholder="مثال: وحدة تحكم إلكترونية V2"
+                    placeholder="مثال: وحدة تحكم إلكترونية"
                   />
                 </div>
                 <div>
@@ -524,15 +484,12 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
 
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">اسم الشركة المصنعة</label>
-                <div className="relative">
-                    <Factory className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input 
-                        value={formData.manufacturer || ''}
-                        onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
-                        className="w-full pr-12 pl-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-royal-500 outline-none"
-                        placeholder="مثال: سيمنز, شنايدر..."
-                    />
-                </div>
+                <input 
+                    value={formData.manufacturer || ''}
+                    onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-royal-500 outline-none"
+                    placeholder="الشركة المصنعة..."
+                />
               </div>
 
               <div>
@@ -542,21 +499,18 @@ export const Products: React.FC<ProductsProps> = ({ products, setProducts, reque
                   value={formData.specs}
                   onChange={(e) => setFormData({...formData, specs: e.target.value})}
                   className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-royal-500 outline-none min-h-[100px]"
-                  placeholder="اكتب المواصفات الفنية هنا..."
+                  placeholder="اكتب المواصفات هنا..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">ملاحظات العيوب (إن وجدت)</label>
-                <div className="relative">
-                  <AlertTriangle className="absolute right-4 top-3 text-amber-500 w-5 h-5" />
-                  <textarea 
-                    value={formData.defects}
-                    onChange={(e) => setFormData({...formData, defects: e.target.value})}
-                    className="w-full pr-12 pl-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-amber-500 outline-none min-h-[80px]"
-                    placeholder="سجل أي عيوب تم رصدها..."
-                  />
-                </div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">ملاحظات العيوب</label>
+                <textarea 
+                  value={formData.defects}
+                  onChange={(e) => setFormData({...formData, defects: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:ring-2 focus:ring-amber-500 outline-none min-h-[80px]"
+                  placeholder="سجل أي عيوب تم رصدها..."
+                />
               </div>
 
               <div className="flex gap-3 pt-4">
