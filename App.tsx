@@ -1,19 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Sidebar } from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
-import { Products } from './components/Products';
-import { Team } from './components/Team';
-import { KPIs } from './components/KPIs';
-import { Documents } from './components/Documents';
-import { About } from './components/About';
-import { Database } from './components/Database';
-import { CompanySettingsPanel } from './components/CompanySettings';
 import { PasswordModal } from './components/PasswordModal';
 import { Login } from './components/Login';
 import { PageView, Product, Employee, DocumentFile, KPIData, CompanySettings, UserRole } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Menu, LogOut } from 'lucide-react';
+import { User, Menu, LogOut, Loader2 } from 'lucide-react';
+
+// Lazy Load Components for Performance Optimization
+const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
+const Products = React.lazy(() => import('./components/Products').then(module => ({ default: module.Products })));
+const Team = React.lazy(() => import('./components/Team').then(module => ({ default: module.Team })));
+const KPIs = React.lazy(() => import('./components/KPIs').then(module => ({ default: module.KPIs })));
+const Documents = React.lazy(() => import('./components/Documents').then(module => ({ default: module.Documents })));
+const About = React.lazy(() => import('./components/About').then(module => ({ default: module.About })));
+const Database = React.lazy(() => import('./components/Database').then(module => ({ default: module.Database })));
+const CompanySettingsPanel = React.lazy(() => import('./components/CompanySettings').then(module => ({ default: module.CompanySettingsPanel })));
 
 // Mock Data
 const INITIAL_PRODUCTS: Product[] = [
@@ -47,6 +49,19 @@ const INITIAL_COMPANY_SETTINGS: CompanySettings = {
   registrationNumber: '',
   certificates: ''
 };
+
+// Loading Spinner Component
+const LoadingFallback = () => (
+  <div className="flex flex-col items-center justify-center h-[60vh] text-royal-600">
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+    >
+      <Loader2 className="w-12 h-12" />
+    </motion.div>
+    <p className="mt-4 font-bold text-gray-500 animate-pulse">جاري تحميل البيانات...</p>
+  </div>
+);
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -142,32 +157,24 @@ function App() {
   };
 
   const renderContent = () => {
-    switch (currentView) {
-      case 'dashboard':
-        return <Dashboard products={products} kpiData={kpiData} handleGenerateReport={handlePrintReport} navigate={setCurrentView} />;
-      case 'products':
-        return <Products products={products} setProducts={setProducts} requestAuth={requestAuth} role={userRole} />;
-      case 'team':
-        return <Team team={team} setTeam={setTeam} requestAuth={requestAuth} role={userRole} />;
-      case 'kpi':
-        return <KPIs data={kpiData} setData={setKpiData} requestAuth={requestAuth} role={userRole} />;
-      case 'documents':
-        return <Documents documents={documents} setDocuments={setDocuments} requestAuth={requestAuth} role={userRole} />;
-      case 'settings':
-        return <CompanySettingsPanel settings={companySettings} onSave={setCompanySettings} requestAuth={requestAuth} role={userRole} />;
-      case 'database':
-        return <Database 
+    return (
+      <Suspense fallback={<LoadingFallback />}>
+        {currentView === 'dashboard' && <Dashboard products={products} kpiData={kpiData} handleGenerateReport={handlePrintReport} navigate={setCurrentView} />}
+        {currentView === 'products' && <Products products={products} setProducts={setProducts} requestAuth={requestAuth} role={userRole} />}
+        {currentView === 'team' && <Team team={team} setTeam={setTeam} requestAuth={requestAuth} role={userRole} />}
+        {currentView === 'kpi' && <KPIs data={kpiData} setData={setKpiData} requestAuth={requestAuth} role={userRole} />}
+        {currentView === 'documents' && <Documents documents={documents} setDocuments={setDocuments} requestAuth={requestAuth} role={userRole} />}
+        {currentView === 'settings' && <CompanySettingsPanel settings={companySettings} onSave={setCompanySettings} requestAuth={requestAuth} role={userRole} />}
+        {currentView === 'database' && <Database 
           data={{ products, team, documents, kpiData, companySettings }} 
           onImport={handleImportData} 
           onReset={handleResetData}
           requestAuth={requestAuth}
           role={userRole}
-        />;
-      case 'about':
-        return <About />;
-      default:
-        return <Dashboard products={products} kpiData={kpiData} handleGenerateReport={handlePrintReport} navigate={setCurrentView} />;
-    }
+        />}
+        {currentView === 'about' && <About />}
+      </Suspense>
+    );
   };
 
   if (!isAuthenticated) {
