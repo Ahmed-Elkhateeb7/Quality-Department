@@ -1,10 +1,12 @@
+
 import React, { useState, useEffect, Suspense } from 'react';
+import localforage from 'localforage';
 import { Sidebar } from './components/Sidebar';
 import { PasswordModal } from './components/PasswordModal';
 import { Login } from './components/Login';
 import { PageView, Product, Employee, DocumentFile, KPIData, CompanySettings, UserRole } from './types';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Menu, LogOut, Loader2 } from 'lucide-react';
+import { User, Menu, LogOut, Loader2, Database as DbIcon } from 'lucide-react';
 
 // Lazy Load Components
 const Dashboard = React.lazy(() => import('./components/Dashboard').then(module => ({ default: module.Dashboard })));
@@ -44,6 +46,13 @@ const INITIAL_COMPANY_SETTINGS: CompanySettings = {
   certificates: ''
 };
 
+// Configure localForage
+localforage.config({
+  name: 'TQM_Pro_System',
+  storeName: 'quality_data',
+  description: 'Main storage for products, team, and quality metrics'
+});
+
 const LoadingFallback = () => (
   <div className="flex flex-col items-center justify-center h-[60vh] text-royal-600">
     <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
@@ -54,57 +63,81 @@ const LoadingFallback = () => (
 );
 
 function App() {
+  const [isInitializing, setIsInitializing] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [currentView, setCurrentView] = useState<PageView>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  const [products, setProducts] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('tqm_products');
-    return saved ? JSON.parse(saved) : INITIAL_PRODUCTS;
-  });
-  const [team, setTeam] = useState<Employee[]>(() => {
-    const saved = localStorage.getItem('tqm_team');
-    return saved ? JSON.parse(saved) : INITIAL_TEAM;
-  });
-  const [documents, setDocuments] = useState<DocumentFile[]>(() => {
-    const saved = localStorage.getItem('tqm_documents');
-    return saved ? JSON.parse(saved) : INITIAL_DOCS;
-  });
-  const [kpiData, setKpiData] = useState<KPIData[]>(() => {
-    const saved = localStorage.getItem('tqm_kpiData');
-    return saved ? JSON.parse(saved) : INITIAL_KPI_DATA;
-  });
-  const [companySettings, setCompanySettings] = useState<CompanySettings>(() => {
-    const saved = localStorage.getItem('tqm_company');
-    return saved ? JSON.parse(saved) : INITIAL_COMPANY_SETTINGS;
-  });
+  // Data State
+  const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
+  const [team, setTeam] = useState<Employee[]>(INITIAL_TEAM);
+  const [documents, setDocuments] = useState<DocumentFile[]>(INITIAL_DOCS);
+  const [kpiData, setKpiData] = useState<KPIData[]>(INITIAL_KPI_DATA);
+  const [companySettings, setCompanySettings] = useState<CompanySettings>(INITIAL_COMPANY_SETTINGS);
 
-  // Independent save logic with QuotaExceeded checks
+  // Load Data and Handle Migration
   useEffect(() => {
-    try { localStorage.setItem('tqm_products', JSON.stringify(products)); } 
-    catch (e) { console.error("Quota Exceeded for Products"); }
-  }, [products]);
+    const initializeStorage = async () => {
+      try {
+        // 1. Try to load from IndexedDB
+        const [savedProducts, savedTeam, savedDocs, savedKpi, savedCompany] = await Promise.all([
+          localforage.getItem<Product[]>('tqm_products'),
+          localforage.getItem<Employee[]>('tqm_team'),
+          localforage.getItem<DocumentFile[]>('tqm_documents'),
+          localforage.getItem<KPIData[]>('tqm_kpiData'),
+          localforage.getItem<CompanySettings>('tqm_company')
+        ]);
 
-  useEffect(() => {
-    try { localStorage.setItem('tqm_team', JSON.stringify(team)); } 
-    catch (e) { console.error("Quota Exceeded for Team"); }
-  }, [team]);
+        // 2. Fallback to localStorage for migration
+        const migrationRequired = !savedProducts && localStorage.getItem('tqm_products');
+        
+        if (migrationRequired) {
+          console.log("Migrating data from localStorage to IndexedDB...");
+          const legacyProducts = JSON.parse(localStorage.getItem('tqm_products') || '[]');
+          const legacyTeam = JSON.parse(localStorage.getItem('tqm_team') || '[]');
+          const legacyDocs = JSON.parse(localStorage.getItem('tqm_documents') || '[]');
+          const legacyKpi = JSON.parse(localStorage.getItem('tqm_kpiData') || '[]');
+          const legacyCompany = JSON.parse(localStorage.getItem('tqm_company') || 'null');
 
-  useEffect(() => {
-    try { localStorage.setItem('tqm_documents', JSON.stringify(documents)); } 
-    catch (e) { console.error("Quota Exceeded for Documents"); }
-  }, [documents]);
+          if (legacyProducts.length) setProducts(legacyProducts);
+          if (legacyTeam.length) setTeam(legacyTeam);
+          if (legacyDocs.length) setDocuments(legacyDocs);
+          if (legacyKpi.length) setKpiData(legacyKpi);
+          if (legacyCompany) setCompanySettings(legacyCompany);
+          
+          // Save immediately to new storage
+          await Promise.all([
+            localforage.setItem('tqm_products', legacyProducts),
+            localforage.setItem('tqm_team', legacyTeam),
+            localforage.setItem('tqm_documents', legacyDocs),
+            localforage.setItem('tqm_kpiData', legacyKpi),
+            localforage.setItem('tqm_company', legacyCompany)
+          ]);
+        } else {
+          // Use saved data or initial
+          if (savedProducts) setProducts(savedProducts);
+          if (savedTeam) setTeam(savedTeam);
+          if (savedDocs) setDocuments(savedDocs);
+          if (savedKpi) setKpiData(savedKpi);
+          if (savedCompany) setCompanySettings(savedCompany);
+        }
+      } catch (err) {
+        console.error("Storage Initialization Error:", err);
+      } finally {
+        setIsInitializing(false);
+      }
+    };
 
-  useEffect(() => {
-    try { localStorage.setItem('tqm_kpiData', JSON.stringify(kpiData)); } 
-    catch (e) { console.error("Quota Exceeded for KPIs"); }
-  }, [kpiData]);
+    initializeStorage();
+  }, []);
 
-  useEffect(() => {
-    try { localStorage.setItem('tqm_company', JSON.stringify(companySettings)); } 
-    catch (e) { console.error("Quota Exceeded for Settings"); }
-  }, [companySettings]);
+  // Sync state to localForage (IndexedDB)
+  useEffect(() => { if (!isInitializing) localforage.setItem('tqm_products', products); }, [products, isInitializing]);
+  useEffect(() => { if (!isInitializing) localforage.setItem('tqm_team', team); }, [team, isInitializing]);
+  useEffect(() => { if (!isInitializing) localforage.setItem('tqm_documents', documents); }, [documents, isInitializing]);
+  useEffect(() => { if (!isInitializing) localforage.setItem('tqm_kpiData', kpiData); }, [kpiData, isInitializing]);
+  useEffect(() => { if (!isInitializing) localforage.setItem('tqm_company', companySettings); }, [companySettings, isInitializing]);
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
@@ -136,7 +169,7 @@ function App() {
     setCurrentView('dashboard');
   };
 
-  const handleImportData = (fullData: any) => {
+  const handleImportData = async (fullData: any) => {
     if (fullData.products) setProducts(fullData.products);
     if (fullData.team) setTeam(fullData.team);
     if (fullData.documents) setDocuments(fullData.documents);
@@ -144,7 +177,8 @@ function App() {
     if (fullData.companySettings) setCompanySettings(fullData.companySettings);
   };
 
-  const handleResetData = () => {
+  const handleResetData = async () => {
+    await localforage.clear();
     setProducts(INITIAL_PRODUCTS);
     setTeam(INITIAL_TEAM);
     setDocuments(INITIAL_DOCS);
@@ -177,6 +211,18 @@ function App() {
       </Suspense>
     );
   };
+
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen bg-royal-950 flex flex-col items-center justify-center text-white text-center p-6">
+          <motion.div animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} className="mb-6">
+              <DbIcon className="w-16 h-16 text-royal-400" />
+          </motion.div>
+          <h1 className="text-2xl font-black mb-2">تحديث محرك التخزين (1GB Mode)</h1>
+          <p className="text-royal-300 animate-pulse">جاري تهيئة قاعدة بيانات IndexedDB ونقل ملفاتك...</p>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) {
     return <Login onLogin={handleLogin} />;
