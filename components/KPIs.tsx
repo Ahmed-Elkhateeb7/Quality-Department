@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { KPIData, UserRole } from '../types';
 import { 
@@ -23,10 +24,8 @@ const ARABIC_MONTHS = [
   'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
 ];
 
-// Expanded years range from 2010 to 2060
 const YEARS_RANGE = Array.from({ length: 51 }, (_, i) => (2010 + i).toString());
 
-// Custom Tooltip Component for a polished look
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -70,11 +69,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
     e.preventDefault();
     if (newData.month && newData.year) {
         setData(prev => {
-            // Remove any existing entry for the same month and year to avoid duplicates
             const filteredPrev = prev.filter(
                 item => !(item.month === newData.month && item.year === newData.year)
             );
-            // Append the new data
             return [...filteredPrev, newData as KPIData];
         });
         
@@ -106,26 +103,13 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
     ];
     
     const csvRows = data.map(d => [
-      d.month,
-      d.year,
-      d.qualityRate,
-      d.defects,
-      d.reservedBlowPieces,
-      d.reservedBlowWeight,
-      d.reservedInjectionPieces,
-      d.reservedInjectionWeight,
-      d.scrappedBlow,
-      d.scrappedWeight,
-      d.scrappedInjection,
-      d.scrappedPieces,
-      d.internalScrapPpm,
-      d.externalScrapPpm,
-      d.ncrShift1,
-      d.ncrShift2,
-      d.ncrShift3,
-      d.totalSupplied,
-      d.totalReturned,
-      d.totalComplaints
+      d.month, d.year, d.qualityRate, d.defects,
+      d.reservedBlowPieces, d.reservedBlowWeight,
+      d.reservedInjectionPieces, d.reservedInjectionWeight,
+      d.scrappedBlow, d.scrappedWeight, d.scrappedInjection, d.scrappedPieces,
+      d.internalScrapPpm, d.externalScrapPpm,
+      d.ncrShift1, d.ncrShift2, d.ncrShift3,
+      d.totalSupplied, d.totalReturned, d.totalComplaints
     ]);
 
     const csvContent = [
@@ -162,7 +146,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
     </motion.div>
   );
 
-  // Filter and Format Data for Charts
   const chartData = data
     .filter(d => selectedYearFilter === 'all' || d.year === selectedYearFilter)
     .map(d => ({
@@ -181,7 +164,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
 
   return (
     <div className="space-y-10 pb-20 px-2">
-      {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 print:hidden">
         <div>
           <h2 className="text-3xl font-black text-slate-900 flex items-center gap-3">
@@ -194,7 +176,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
         </div>
         
         <div className="flex flex-wrap gap-4 w-full md:w-auto items-center">
-            {/* Year Filter Dropdown */}
             <div className="flex items-center gap-3 bg-white border border-slate-200 px-4 py-2.5 rounded-2xl shadow-sm">
                 <Calendar className="w-5 h-5 text-royal-600" />
                 <span className="text-sm font-bold text-slate-600">تصفية حسب السنة:</span>
@@ -234,7 +215,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
         </div>
       ) : (
         <>
-            {/* Primary Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <ChartCard title="إحصائيات التوريد والمرتجعات" icon={ShoppingCart} color="bg-emerald-500">
                 <div className="h-72 w-full">
@@ -252,7 +232,30 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                 </div>
                 </ChartCard>
 
-                <ChartCard title="مؤشر الهالك في المليون (PPM)" icon={Target} color="bg-rose-600">
+                <ChartCard title="تحليل اتجاه شكاوى العملاء" icon={MessageSquareWarning} color="bg-rose-600">
+                <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <defs>
+                        <linearGradient id="gradComplaints" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#e11d48" stopOpacity={0.4}/>
+                            <stop offset="95%" stopColor="#e11d48" stopOpacity={0}/>
+                        </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
+                        <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend iconType="plainline" />
+                        <Area type="monotone" dataKey="totalComplaints" name="إجمالي الشكاوى" stroke="#e11d48" strokeWidth={4} fillOpacity={1} fill="url(#gradComplaints)" />
+                    </AreaChart>
+                    </ResponsiveContainer>
+                </div>
+                </ChartCard>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                <ChartCard title="مؤشر الهالك في المليون (PPM)" icon={Target} color="bg-indigo-600">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -267,9 +270,7 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </ResponsiveContainer>
                 </div>
                 </ChartCard>
-            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <ChartCard title="تطور مخزون المحجوز (سنوياً)" icon={Boxes} color="bg-royal-500">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -295,7 +296,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </ResponsiveContainer>
                 </div>
                 </ChartCard>
+            </div>
 
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <ChartCard title="تحليل فاقد الهالك (سنوياً)" icon={Trash2} color="bg-rose-500">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -311,10 +314,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </ResponsiveContainer>
                 </div>
                 </ChartCard>
-            </div>
 
-            <ChartCard title="تقارير عدم المطابقة حسب الورادي" icon={ShieldCheck} color="bg-royal-800">
-                <div className="h-80 w-full">
+                <ChartCard title="تقارير عدم المطابقة حسب الورادي" icon={ShieldCheck} color="bg-royal-800">
+                <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }} barGap={8}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -328,11 +330,11 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </BarChart>
                 </ResponsiveContainer>
                 </div>
-            </ChartCard>
+                </ChartCard>
+            </div>
         </>
       )}
 
-      {/* Modal for adding data */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4 md:p-10">
           <motion.div 
@@ -340,7 +342,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
             animate={{ opacity: 1, y: 0, scale: 1 }} 
             className="bg-white rounded-[2.5rem] w-full max-w-5xl shadow-2xl p-6 md:p-12 max-h-[92vh] overflow-y-auto border border-white/20 relative"
           >
-            {/* Header */}
             <div className="flex justify-between items-center mb-10 pb-6 border-b border-slate-100">
                 <div className="flex items-center gap-4">
                     <div className="bg-royal-800 p-3 rounded-2xl text-white shadow-lg shadow-royal-800/20">
@@ -357,12 +358,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
             </div>
             
             <form onSubmit={handleSubmit} className="space-y-12">
-                {/* Section 1: Basic Info */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     <div className="space-y-3">
-                        <label className="text-sm font-black text-slate-700 flex items-center gap-2">
-                             السنة
-                        </label>
+                        <label className="text-sm font-black text-slate-700 flex items-center gap-2">السنة</label>
                         <div className="flex items-center gap-2">
                             <button type="button" onClick={() => adjustYear('prev')} className="p-3 bg-slate-50 border border-slate-200 rounded-xl hover:bg-royal-50 hover:text-royal-700 transition-all shadow-sm">
                               <ChevronRight className="w-5 h-5" />
@@ -401,7 +399,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </div>
                 </div>
 
-                {/* Section 2: Production Storage */}
                 <div className="bg-royal-50/40 p-10 rounded-[2.5rem] border border-royal-100">
                     <h4 className="font-black text-royal-900 mb-8 flex items-center gap-3 text-lg">
                         <Boxes className="w-6 h-6 text-royal-600" /> كميات الإنتاج المحجوز (Reserved)
@@ -427,7 +424,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {/* Section 3: Scrap */}
                     <div className="bg-rose-50/40 p-10 rounded-[2.5rem] border border-rose-100">
                         <h4 className="font-black text-rose-900 mb-8 flex items-center gap-3 text-lg">
                             <Trash2 className="w-6 h-6 text-rose-600" /> بيانات الهالك (Scrap)
@@ -452,7 +448,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                         </div>
                     </div>
                     
-                    {/* Section 4: PPM */}
                     <div className="bg-indigo-50/40 p-10 rounded-[2.5rem] border border-indigo-100">
                         <h4 className="font-black text-indigo-900 mb-8 flex items-center gap-3 text-lg">
                             <Target className="w-6 h-6 text-indigo-600" /> مؤشرات الهالك PPM
@@ -471,7 +466,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    {/* Section 5: NCR */}
                     <div className="bg-amber-50/40 p-10 rounded-[2.5rem] border border-amber-100">
                         <h4 className="font-black text-amber-900 mb-8 flex items-center gap-3 text-lg">
                             <ShieldCheck className="w-6 h-6 text-amber-600" /> تقارير عدم المطابقة (NCR)
@@ -492,7 +486,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                         </div>
                     </div>
 
-                    {/* Section 6: Logistics */}
                     <div className="bg-emerald-50/40 p-10 rounded-[2.5rem] border border-emerald-100">
                         <h4 className="font-black text-emerald-900 mb-8 flex items-center gap-3 text-lg">
                             <ShoppingCart className="w-6 h-6 text-emerald-600" /> بيانات التوريد والشكاوى

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { LayoutDashboard, Package, Users, Activity, FileText, Info, X, ShieldCheck, Database as DbIcon, Settings } from 'lucide-react';
-import { PageView, CompanySettings } from '../types';
+import { PageView, CompanySettings, UserRole } from '../types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SidebarProps {
@@ -10,9 +10,10 @@ interface SidebarProps {
   isOpen: boolean;
   toggleSidebar: () => void;
   companySettings?: CompanySettings;
+  role: UserRole | null;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isOpen, toggleSidebar, companySettings }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, isOpen, toggleSidebar, companySettings, role }) => {
   const menuItems = [
     { id: 'dashboard', label: 'لوحة القيادة', icon: LayoutDashboard },
     { id: 'products', label: 'المنتجات والمواصفات', icon: Package },
@@ -101,10 +102,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setCurrentView, i
         <div className="p-4 border-t border-royal-800/50">
           <div className="flex items-center gap-3 bg-royal-900/50 p-3 rounded-xl">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-royal-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg shadow-lg">
-                  M
+                  {role === 'admin' ? 'A' : 'V'}
               </div>
               <div className="overflow-hidden">
-                  <p className="font-bold text-sm truncate">المدير العام</p>
+                  <p className="font-bold text-sm truncate">{role === 'admin' ? 'المدير العام' : 'مستخدم زائر'}</p>
                   <p className="text-xs text-royal-300 truncate">متصل الآن</p>
               </div>
           </div>

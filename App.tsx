@@ -18,28 +18,20 @@ const About = React.lazy(() => import('./components/About').then(module => ({ de
 const Database = React.lazy(() => import('./components/Database').then(module => ({ default: module.Database })));
 const CompanySettingsPanel = React.lazy(() => import('./components/CompanySettings').then(module => ({ default: module.CompanySettingsPanel })));
 
-const INITIAL_PRODUCTS: Product[] = [
-  { id: '1', name: 'محرك كهربائي X500', manufacturer: 'سيمنز الألمانية', specs: '5000 RPM, 220V', defects: '', status: 'approved', image: 'https://images.unsplash.com/photo-1562259920-47afc305f369?w=400&auto=format&fit=crop' },
-  { id: '2', name: 'لوحة تحكم صناعية', manufacturer: 'شنايدر إلكتريك', specs: 'IP65, 7 inch', defects: 'خدش خارجي', status: 'rejected', image: 'https://images.unsplash.com/photo-1555664424-778a69032054?w=400&auto=format&fit=crop' },
-];
+const INITIAL_PRODUCTS: Product[] = [];
 
-const INITIAL_TEAM: Employee[] = [
-  { id: '1', name: 'محمد علي', employeeCode: '1001', role: 'مدير الجودة', department: 'management', joinedDate: '2023-01-15', email: 'm.ali@tqm-sys.com', phone: '+966 50 123 4567' },
-  { id: '2', name: 'سارة خالد', employeeCode: '2050', role: 'مراقب جودة أول', department: 'qc', joinedDate: '2023-03-10', email: 's.khaled@tqm-sys.com', phone: '+966 55 987 6543' },
-];
+const INITIAL_TEAM: Employee[] = [];
 
-const INITIAL_DOCS: DocumentFile[] = [
-  { id: '1', name: 'دليل ISO 9001', type: 'pdf', size: '2.5 MB', date: '2024-01-10', url: '#' },
-];
+const INITIAL_DOCS: DocumentFile[] = [];
 
 const INITIAL_KPI_DATA: KPIData[] = [];
 
 const INITIAL_COMPANY_SETTINGS: CompanySettings = {
-  name: 'الشركة المتطورة للصناعة',
-  slogan: 'الجودة أولاً',
-  address: 'الرياض، المملكة العربية السعودية',
+  name: '',
+  slogan: '',
+  address: '',
   logo: '',
-  email: 'info@factory.com',
+  email: '',
   phone: '',
   website: '',
   registrationNumber: '',
@@ -80,7 +72,6 @@ function App() {
   useEffect(() => {
     const initializeStorage = async () => {
       try {
-        // 1. Try to load from IndexedDB
         const [savedProducts, savedTeam, savedDocs, savedKpi, savedCompany] = await Promise.all([
           localforage.getItem<Product[]>('tqm_products'),
           localforage.getItem<Employee[]>('tqm_team'),
@@ -89,11 +80,9 @@ function App() {
           localforage.getItem<CompanySettings>('tqm_company')
         ]);
 
-        // 2. Fallback to localStorage for migration
         const migrationRequired = !savedProducts && localStorage.getItem('tqm_products');
         
         if (migrationRequired) {
-          console.log("Migrating data from localStorage to IndexedDB...");
           const legacyProducts = JSON.parse(localStorage.getItem('tqm_products') || '[]');
           const legacyTeam = JSON.parse(localStorage.getItem('tqm_team') || '[]');
           const legacyDocs = JSON.parse(localStorage.getItem('tqm_documents') || '[]');
@@ -106,7 +95,6 @@ function App() {
           if (legacyKpi.length) setKpiData(legacyKpi);
           if (legacyCompany) setCompanySettings(legacyCompany);
           
-          // Save immediately to new storage
           await Promise.all([
             localforage.setItem('tqm_products', legacyProducts),
             localforage.setItem('tqm_team', legacyTeam),
@@ -115,7 +103,6 @@ function App() {
             localforage.setItem('tqm_company', legacyCompany)
           ]);
         } else {
-          // Use saved data or initial
           if (savedProducts) setProducts(savedProducts);
           if (savedTeam) setTeam(savedTeam);
           if (savedDocs) setDocuments(savedDocs);
@@ -132,7 +119,6 @@ function App() {
     initializeStorage();
   }, []);
 
-  // Sync state to localForage (IndexedDB)
   useEffect(() => { if (!isInitializing) localforage.setItem('tqm_products', products); }, [products, isInitializing]);
   useEffect(() => { if (!isInitializing) localforage.setItem('tqm_team', team); }, [team, isInitializing]);
   useEffect(() => { if (!isInitializing) localforage.setItem('tqm_documents', documents); }, [documents, isInitializing]);
@@ -236,6 +222,7 @@ function App() {
         isOpen={isSidebarOpen}
         toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         companySettings={companySettings}
+        role={userRole}
       />
       
       <main className="flex-1 p-4 lg:p-10 w-full transition-all duration-300">

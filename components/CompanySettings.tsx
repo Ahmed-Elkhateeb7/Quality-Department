@@ -4,7 +4,7 @@ import { CompanySettings, UserRole } from '../types';
 import { 
   Building2, MapPin, Phone, Mail, Globe, Upload, Save, 
   BadgeCheck, FileText, Camera, Award, ShieldCheck, 
-  Briefcase, Fingerprint, ExternalLink
+  ExternalLink, Edit3, X, Info, Landmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,6 +17,7 @@ interface CompanySettingsProps {
 
 export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings, onSave, requestAuth, role }) => {
   const [formData, setFormData] = useState<CompanySettings>(settings);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,30 +32,46 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (role === 'admin') {
-        requestAuth(() => {
-          onSave(formData);
-          setIsSaved(true);
-          setTimeout(() => setIsSaved(false), 3000);
-        });
-    }
+  const handleOpenEdit = () => {
+    requestAuth(() => {
+      setFormData(settings); // مزامنة البيانات قبل الفتح
+      setIsEditModalOpen(true);
+    });
   };
 
-  const isReadOnly = role !== 'admin';
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave(formData);
+    setIsSaved(true);
+    setIsEditModalOpen(false);
+    setTimeout(() => setIsSaved(false), 3000);
+  };
+
+  const isAdmin = role === 'admin';
+
+  const InfoCard = ({ icon: Icon, label, value, colorClass }: any) => (
+    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all flex items-start gap-4 group">
+      <div className={`p-3 rounded-xl ${colorClass} bg-opacity-10 shrink-0 group-hover:scale-110 transition-transform`}>
+        <Icon className={`w-6 h-6 ${colorClass.replace('bg-', 'text-')}`} />
+      </div>
+      <div className="overflow-hidden">
+        <p className="text-xs font-bold text-gray-400 mb-1">{label}</p>
+        <p className="text-sm font-black text-gray-800 leading-tight truncate">{value || 'غير محدد'}</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 pb-20">
-      {/* Top Header Section */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl shadow-sm border border-gray-100">
+    <div className="max-w-5xl mx-auto space-y-8 pb-20">
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[2rem] shadow-sm border border-gray-100">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-royal-800 rounded-2xl text-white shadow-lg shadow-royal-800/20">
-            <Building2 className="w-8 h-8" />
+          <div className="p-3 bg-royal-800 rounded-2xl text-white shadow-lg">
+            <Landmark className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-2xl font-black text-gray-900">هوية المنشأة</h2>
-            <p className="text-gray-500 text-sm">إدارة المعلومات الأساسية والرموز الرسمية للمنظمة</p>
+            <h2 className="text-2xl font-black text-gray-900">الملف التعريفي للمنشأة</h2>
+            <p className="text-gray-500 text-sm">إدارة الهوية الرسمية وبيانات التواصل</p>
           </div>
         </div>
         
@@ -62,251 +79,167 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
           <AnimatePresence>
             {isSaved && (
               <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl flex items-center gap-2 font-bold border border-emerald-100"
+                className="bg-emerald-50 text-emerald-700 px-4 py-2 rounded-xl flex items-center gap-2 font-bold border border-emerald-100 text-sm"
               >
-                <BadgeCheck className="w-5 h-5" />
-                تم التحديث
+                <BadgeCheck className="w-4 h-4" />
+                تم حفظ التغييرات
               </motion.div>
             )}
           </AnimatePresence>
 
-          {!isReadOnly && (
+          {isAdmin && (
             <button 
-                onClick={handleSubmit}
-                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3 bg-royal-800 text-white rounded-2xl font-black hover:bg-royal-900 transition-all shadow-xl shadow-royal-800/20 active:scale-95"
+                onClick={handleOpenEdit}
+                title="تحديث بيانات المنشأة"
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3 bg-royal-800 text-white rounded-2xl font-black hover:bg-royal-950 transition-all shadow-xl shadow-royal-800/20 active:scale-95"
             >
-                <Save className="w-5 h-5" />
-                حفظ التغييرات
+                <Edit3 className="w-5 h-5" />
+                تعديل الهوية
             </button>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Corporate Identity Preview */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white rounded-[2.5rem] overflow-hidden shadow-xl shadow-royal-900/5 border border-royal-100 sticky top-6">
-             {/* Header Decorative Pattern */}
-             <div className="h-32 bg-royal-800 relative">
-                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
-                <div className="absolute -bottom-12 right-1/2 translate-x-1/2">
-                    <div className="w-32 h-32 bg-white rounded-3xl shadow-2xl border-4 border-white flex items-center justify-center overflow-hidden">
-                        {formData.logo ? (
-                            <img src={formData.logo} alt="Logo" className="w-full h-full object-contain p-2" />
-                        ) : (
-                            <Building2 className="w-12 h-12 text-gray-200" />
-                        )}
-                        {!isReadOnly && (
-                            <button 
-                                onClick={() => fileInputRef.current?.click()}
-                                className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center text-white"
-                            >
-                                <Camera className="w-8 h-8" />
-                            </button>
-                        )}
-                    </div>
-                </div>
-             </div>
-
-             <div className="pt-16 pb-8 px-8 text-center">
-                <h3 className="text-2xl font-black text-gray-900 mb-1">{formData.name || 'اسم المنشأة'}</h3>
-                <p className="text-royal-600 font-bold mb-8">{formData.slogan || 'شعار الجودة الرسمي'}</p>
-                
-                <div className="space-y-4">
-                    <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 text-right group hover:bg-royal-50 transition-colors">
-                        <div className="p-2 bg-white rounded-lg text-royal-600 shadow-sm group-hover:bg-royal-600 group-hover:text-white transition-all">
-                            <MapPin className="w-4 h-4" />
-                        </div>
-                        <div className="overflow-hidden">
-                            <p className="text-[10px] font-bold text-gray-400">المقر الرئيسي</p>
-                            <p className="text-xs font-bold text-gray-700 truncate">{formData.address || 'لم يحدد بعد'}</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-right group hover:bg-royal-50 transition-colors">
-                            <div className="p-2 bg-white rounded-lg text-emerald-600 shadow-sm mb-2 w-fit group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                                <Phone className="w-4 h-4" />
-                            </div>
-                            <p className="text-[10px] font-bold text-gray-400">الهاتف</p>
-                            <p className="text-xs font-bold text-gray-700 dir-ltr truncate">{formData.phone || '-'}</p>
-                        </div>
-                        <div className="bg-gray-50 p-4 rounded-2xl border border-gray-100 text-right group hover:bg-royal-50 transition-colors">
-                            <div className="p-2 bg-white rounded-lg text-indigo-600 shadow-sm mb-2 w-fit group-hover:bg-indigo-600 group-hover:text-white transition-all">
-                                <Mail className="w-4 h-4" />
-                            </div>
-                            <p className="text-[10px] font-bold text-gray-400">البريد</p>
-                            <p className="text-xs font-bold text-gray-700 truncate">{formData.email || '-'}</p>
-                        </div>
-                    </div>
-
-                    {formData.website && (
-                        <div className="flex items-center justify-between bg-royal-50 p-4 rounded-2xl border border-royal-100">
-                             <div className="flex items-center gap-3">
-                                <Globe className="w-4 h-4 text-royal-600" />
-                                <span className="text-xs font-bold text-royal-800 truncate">{formData.website}</span>
-                             </div>
-                             <ExternalLink className="w-3 h-3 text-royal-400" />
-                        </div>
-                    )}
-                </div>
-
-                {formData.certificates && (
-                  <div className="mt-8 pt-6 border-t border-gray-100">
-                    <div className="flex items-center justify-center gap-2 mb-4 bg-amber-50 py-1.5 rounded-full border border-amber-100">
-                      <Award className="w-4 h-4 text-amber-600" />
-                      <span className="text-[10px] font-black text-amber-800">شهادات الجودة المعتمدة</span>
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-2">
-                        {formData.certificates.split(',').map((cert, idx) => (
-                            <span key={idx} className="px-3 py-1 bg-white border border-gray-200 text-[10px] font-bold text-gray-600 rounded-lg shadow-sm">
-                                {cert.trim()}
-                            </span>
-                        ))}
-                    </div>
-                  </div>
+      {/* Main Content Layout */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        
+        {/* Profile Card (Sidebar-like) */}
+        <div className="md:col-span-1">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-[2.5rem] overflow-hidden shadow-sm border border-gray-100 flex flex-col items-center p-8 text-center sticky top-6"
+          >
+            <div className="relative group">
+                <div className="w-44 h-44 bg-gray-50 rounded-[2rem] border-2 border-gray-100 shadow-inner flex items-center justify-center mb-6 overflow-hidden">
+                {settings.logo ? (
+                    <img src={settings.logo} alt="Company Logo" className="w-full h-full object-contain p-4 transition-transform group-hover:scale-110" />
+                ) : (
+                    <Building2 className="w-20 h-20 text-gray-200" />
                 )}
-             </div>
-          </div>
+                </div>
+                {isAdmin && (
+                    <button 
+                        onClick={handleOpenEdit}
+                        className="absolute bottom-4 right-4 p-3 bg-white text-royal-800 rounded-2xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-all hover:bg-royal-50"
+                        title="تحديث الشعار"
+                    >
+                        <Camera className="w-5 h-5" />
+                    </button>
+                )}
+            </div>
+
+            <h3 className="text-2xl font-black text-gray-900 mb-2">{settings.name || 'اسم المنشأة'}</h3>
+            <p className="text-royal-600 font-bold text-sm italic mb-6">"{settings.slogan || 'شعار الجودة الرسمي'}"</p>
+
+            <div className="w-full space-y-4 pt-6 border-t border-gray-50">
+               <div className="flex flex-col items-center gap-1 p-4 bg-gray-50 rounded-2xl">
+                  <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">السجل التجاري</span>
+                  <span className="text-royal-800 font-black font-mono text-lg">{settings.registrationNumber || '---'}</span>
+               </div>
+               
+               {settings.website && (
+                 <a href={settings.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3 bg-royal-50 text-royal-700 rounded-xl hover:bg-royal-100 transition-all font-bold text-sm">
+                    <Globe className="w-4 h-4" />
+                    زيارة الموقع الرسمي
+                    <ExternalLink className="w-3 h-3" />
+                 </a>
+               )}
+            </div>
+          </motion.div>
         </div>
 
-        {/* Right Column: Configuration Form */}
-        <div className="lg:col-span-8 space-y-8">
-           <form onSubmit={handleSubmit} className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-sm border border-gray-100">
-              <div className="space-y-10">
-                  {/* Identity Section */}
-                  <section>
-                      <div className="flex items-center gap-3 mb-8">
-                          <Fingerprint className="w-6 h-6 text-royal-800" />
-                          <h4 className="text-lg font-black text-gray-800">بيانات التعريف القانونية</h4>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                              <label className="text-sm font-bold text-gray-600 mr-2">اسم المنشأة الرسمي</label>
-                              <div className="relative">
-                                  <Building2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                  <input 
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({...formData, name: e.target.value})}
-                                    className="w-full pr-12 pl-4 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none font-bold text-gray-800 bg-gray-50/30 transition-all disabled:opacity-60"
-                                    placeholder="أدخل الاسم الرسمي للشركة"
-                                    disabled={isReadOnly}
-                                  />
-                              </div>
-                          </div>
-                          <div className="space-y-2">
-                              <label className="text-sm font-bold text-gray-600 mr-2">السجل التجاري / الترخيص</label>
-                              <div className="relative">
-                                  <ShieldCheck className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                  <input 
-                                    value={formData.registrationNumber}
-                                    onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})}
-                                    className="w-full pr-12 pl-4 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none font-mono text-center font-bold text-royal-800 bg-gray-50/30 disabled:opacity-60"
-                                    placeholder="CR-00000000"
-                                    disabled={isReadOnly}
-                                  />
-                              </div>
-                          </div>
-                          <div className="md:col-span-2 space-y-2">
-                              <label className="text-sm font-bold text-gray-600 mr-2">الشعار اللفظي (Slogan)</label>
-                              <input 
-                                value={formData.slogan}
-                                onChange={(e) => setFormData({...formData, slogan: e.target.value})}
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none font-bold text-gray-800 bg-gray-50/30 disabled:opacity-60"
-                                placeholder="مثال: الجودة أساس تميزنا"
-                                disabled={isReadOnly}
-                              />
-                          </div>
-                      </div>
-                  </section>
-                  
-                  <div className="w-full h-px bg-gray-100" />
+        {/* Details and Certificates */}
+        <div className="md:col-span-2 space-y-8">
+           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <InfoCard icon={Mail} label="البريد الإلكتروني" value={settings.email} colorClass="bg-blue-600" />
+              <InfoCard icon={Phone} label="أرقام التواصل" value={settings.phone} colorClass="bg-emerald-600" />
+              <InfoCard icon={MapPin} label="العنوان الجغرافي" value={settings.address} colorClass="bg-rose-600" />
+              <InfoCard icon={ShieldCheck} label="التراخيص المعتمدة" value={settings.registrationNumber ? 'سجل تجاري نشط' : 'غير محدد'} colorClass="bg-amber-600" />
+           </div>
 
-                  {/* Contact Section */}
-                  <section>
-                      <div className="flex items-center gap-3 mb-8">
-                          <Briefcase className="w-6 h-6 text-royal-800" />
-                          <h4 className="text-lg font-black text-gray-800">معلومات الاتصال والمقر</h4>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="md:col-span-2 space-y-2">
-                              <label className="text-sm font-bold text-gray-600 mr-2">العنوان الوطني</label>
-                              <div className="relative">
-                                <MapPin className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                                <input 
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                                    className="w-full pr-12 pl-4 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none bg-gray-50/30 disabled:opacity-60"
-                                    placeholder="أدخل العنوان التفصيلي"
-                                    disabled={isReadOnly}
-                                />
-                              </div>
-                          </div>
-                          <div className="space-y-2">
-                              <label className="text-sm font-bold text-gray-600 mr-2">البريد الإلكتروني الرسمي</label>
-                              <input 
-                                value={formData.email}
-                                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none text-left font-bold text-gray-700 bg-gray-50/30 disabled:opacity-60"
-                                placeholder="office@company.com"
-                                dir="ltr"
-                                disabled={isReadOnly}
-                              />
-                          </div>
-                          <div className="space-y-2">
-                              <label className="text-sm font-bold text-gray-600 mr-2">رقم التواصل</label>
-                              <input 
-                                value={formData.phone}
-                                onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                                className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none text-left font-bold text-gray-700 bg-gray-50/30 disabled:opacity-60"
-                                placeholder="+966"
-                                dir="ltr"
-                                disabled={isReadOnly}
-                              />
-                          </div>
-                      </div>
-                  </section>
-
-                  <div className="w-full h-px bg-gray-100" />
-
-                  {/* Certifications Section */}
-                  <section>
-                      <div className="flex items-center gap-3 mb-8">
-                          <Award className="w-6 h-6 text-royal-800" />
-                          <h4 className="text-lg font-black text-gray-800">التوثيق وشهادات الاعتماد</h4>
-                      </div>
-                      <div className="space-y-4">
-                          <label className="text-sm font-bold text-gray-600 mr-2">الشهادات والاعتمادات (افصل بينهم بفاصلة)</label>
-                          <div className="relative">
-                            <FileText className="absolute right-4 top-4 w-5 h-5 text-gray-400" />
-                            <textarea 
-                                value={formData.certificates || ''}
-                                onChange={(e) => setFormData({...formData, certificates: e.target.value})}
-                                className="w-full pr-12 pl-4 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 focus:border-royal-500 outline-none min-h-[120px] bg-gray-50/30 font-bold text-royal-900 disabled:opacity-60"
-                                placeholder="مثال: ISO 9001, ISO 14001, OHSAS 18001"
-                                disabled={isReadOnly}
-                            />
-                          </div>
-                          <p className="text-[10px] text-gray-400 mr-2">تستخدم هذه البيانات في تذييل التقارير الرسمية.</p>
-                      </div>
-                  </section>
+           {/* Certificates Card */}
+           <motion.div 
+             initial={{ opacity: 0, scale: 0.95 }}
+             animate={{ opacity: 1, scale: 1 }}
+             className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm relative overflow-hidden"
+           >
+              <div className="absolute top-0 left-0 w-2 h-full bg-amber-400" />
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-amber-50 rounded-2xl">
+                  <Award className="w-7 h-7 text-amber-600" />
+                </div>
+                <div>
+                    <h4 className="text-xl font-black text-gray-800">الاعتمادات الدولية والمحلية</h4>
+                    <p className="text-gray-400 text-xs font-bold">قائمة شهادات الجودة الموثقة للمنشأة</p>
+                </div>
               </div>
+              
+              {settings.certificates ? (
+                <div className="flex flex-wrap gap-4">
+                  {settings.certificates.split(',').map((cert, idx) => (
+                    <div 
+                      key={idx}
+                      className="px-6 py-4 bg-gradient-to-tr from-gray-50 to-white border border-gray-200 rounded-[1.5rem] shadow-sm flex items-center gap-4 hover:border-amber-400 transition-colors group"
+                    >
+                      <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:rotate-12 transition-transform">
+                        <BadgeCheck className="w-5 h-5" />
+                      </div>
+                      <span className="font-black text-gray-700">{cert.trim()}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
+                  <p className="text-gray-400 font-bold">لم يتم إضافة شهادات اعتماد رسمية بعد</p>
+                </div>
+              )}
+           </motion.div>
 
-              {/* Invisible hidden file input */}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={isReadOnly}
-              />
-           </form>
+           {/* Informational Banner */}
+           <div className="bg-royal-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-xl shadow-royal-900/20">
+              <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+              <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                 <div className="p-5 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20">
+                    <ShieldCheck className="w-16 h-16 text-royal-200" />
+                 </div>
+                 <div className="text-center md:text-right">
+                    <h4 className="text-2xl font-black mb-3">بيانات نظام الجودة (TQM)</h4>
+                    <p className="text-royal-100 text-sm leading-relaxed max-w-lg font-medium">
+                      هذه البيانات تُستخدم كمرجع رسمي لتوليد الترويسات (Headers) في التقارير المطبوعة والمستندات الرقمية المعتمدة داخل النظام.
+                    </p>
+                 </div>
+              </div>
+           </div>
         </div>
       </div>
-    </div>
-  );
-};
+
+      {/* Edit Modal */}
+      <AnimatePresence>
+        {isEditModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-royal-950/60 backdrop-blur-md p-4">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 40 }}
+              className="bg-white rounded-[3rem] w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]"
+            >
+              <div className="p-8 border-b bg-gray-50/50 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-royal-100 text-royal-800 rounded-2xl">
+                    <Edit3 className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-gray-800">تعديل بيانات المنشأة</h3>
+                    <p className="text-gray-500 text-sm">أدخل البيانات الرسمية بدقة لتحديث الهوية الرقمية</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsEditModalOpen(false)} className="p-3 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-2xl transition-all border border-transparent hover:border-red-100">
+                  <X className="w-8 h-8" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmit} className="p-10 overflow-y-auto space-y-
