@@ -8,7 +8,7 @@ import {
 import { 
   FileSpreadsheet, Plus, X, Boxes, Trash2, ShoppingCart, 
   ShieldCheck, Activity, History, MessageSquareWarning,
-  ChevronRight, ChevronLeft, Target, Calendar, BarChart3, Weight, Factory, AlertCircle
+  ChevronRight, ChevronLeft, Target, Calendar, BarChart3, Weight, Factory, AlertCircle, TrendingUp
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -29,16 +29,21 @@ const YEARS_RANGE = Array.from({ length: 51 }, (_, i) => (2010 + i).toString());
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900/90 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-2xl text-white text-right font-sans">
-        <p className="font-bold mb-2 border-b border-slate-700 pb-1">{label}</p>
+      <div className="bg-slate-900/95 backdrop-blur-md border border-slate-700 p-4 rounded-2xl shadow-2xl text-white text-right font-sans">
+        <p className="font-bold mb-3 border-b border-slate-700 pb-2 text-royal-300">{label}</p>
         {payload.map((entry: any, index: number) => (
-          <div key={index} className="flex items-center justify-between gap-4 text-sm py-0.5">
-            <span style={{ color: entry.color }} className="font-bold">
-              {entry.value.toLocaleString()} {entry.name.includes('وزن') ? 'كجم' : ''}
+          <div key={index} className="flex items-center justify-between gap-6 text-sm py-1.5">
+            <span style={{ color: entry.color }} className="font-black text-base">
+              {entry.value.toLocaleString()} {entry.name.includes('وزن') ? 'كجم' : 'قطعة'}
             </span>
-            <span className="text-slate-300">{entry.name}</span>
+            <span className="text-slate-300 font-medium">{entry.name}</span>
           </div>
         ))}
+        {payload.length >= 2 && payload[0].dataKey === 'totalProduction' && payload[1].dataKey === 'totalInternalReserved' && (
+          <div className="mt-3 pt-2 border-t border-slate-700 text-xs font-bold text-amber-400">
+            نسبة المحجوز: {((payload[1].value / payload[0].value) * 100).toFixed(1)}% من الإنتاج
+          </div>
+        )}
       </div>
     );
   }
@@ -131,12 +136,12 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
     document.body.removeChild(link);
   };
 
-  const ChartCard = ({ title, icon: Icon, color, children }: any) => (
+  const ChartCard = ({ title, icon: Icon, color, children, fullWidth = false }: any) => (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-royal-200/30 transition-all duration-500"
+      className={`bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-royal-200/30 transition-all duration-500 ${fullWidth ? 'lg:col-span-2' : ''}`}
     >
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -218,47 +223,55 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
             <p className="text-slate-400 mt-2 font-medium">قم بإضافة تقارير جديدة لعرض التحليلات هنا</p>
         </div>
       ) : (
-        <>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <ChartCard title="اتجاه إجمالي الإنتاج الكلي" icon={Factory} color="bg-royal-600">
-                <div className="h-72 w-full">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            {/* Combined Production & Reserved Chart */}
+            <ChartCard title="تحليل كفاءة الإنتاج مقابل المحجوزات" icon={TrendingUp} color="bg-royal-600" fullWidth={true}>
+                <div className="h-96 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <ComposedChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                         <defs>
-                        <linearGradient id="gradProd" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#1e40af" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#1e40af" stopOpacity={0}/>
-                        </linearGradient>
+                            <linearGradient id="gradProd" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#1e40af" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#1e40af" stopOpacity={0}/>
+                            </linearGradient>
                         </defs>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                         <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
                         <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="plainline" />
-                        <Area type="monotone" dataKey="totalProduction" name="إجمالي الإنتاج" stroke="#1e40af" strokeWidth={4} fillOpacity={1} fill="url(#gradProd)" />
-                    </AreaChart>
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                        <Area 
+                            type="monotone" 
+                            dataKey="totalProduction" 
+                            name="إجمالي الإنتاج" 
+                            stroke="#1e40af" 
+                            strokeWidth={4} 
+                            fillOpacity={1} 
+                            fill="url(#gradProd)" 
+                        />
+                        <Bar 
+                            dataKey="totalInternalReserved" 
+                            name="المحجوز الداخلي" 
+                            fill="#f59e0b" 
+                            radius={[6, 6, 0, 0]} 
+                            barSize={40} 
+                        />
+                    </ComposedChart>
                     </ResponsiveContainer>
                 </div>
-                </ChartCard>
-
-                <ChartCard title="إجمالي المحجوزات الداخلية" icon={AlertCircle} color="bg-amber-600">
-                <div className="h-72 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
-                        <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                        <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                        <Bar dataKey="totalInternalReserved" name="المحجوز الداخلي" fill="#f59e0b" radius={[6, 6, 0, 0]} barSize={35} />
-                    </BarChart>
-                    </ResponsiveContainer>
+                <div className="mt-6 p-4 bg-slate-50 rounded-2xl flex flex-wrap gap-6 justify-center text-sm font-bold text-slate-600">
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-royal-600"></div>
+                        <span>الإنتاج المستهدف والكلي</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                        <span>حجم الهالك/المحجوز الفعلي</span>
+                    </div>
                 </div>
-                </ChartCard>
-            </div>
+            </ChartCard>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <ChartCard title="إحصائيات التوريد والمرتجعات" icon={ShoppingCart} color="bg-emerald-500">
+            <ChartCard title="إحصائيات التوريد والمرتجعات" icon={ShoppingCart} color="bg-emerald-500">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -272,9 +285,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </BarChart>
                     </ResponsiveContainer>
                 </div>
-                </ChartCard>
+            </ChartCard>
 
-                <ChartCard title="تحليل اتجاه شكاوى العملاء" icon={MessageSquareWarning} color="bg-rose-600">
+            <ChartCard title="تحليل اتجاه شكاوى العملاء" icon={MessageSquareWarning} color="bg-rose-600">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -293,11 +306,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </AreaChart>
                     </ResponsiveContainer>
                 </div>
-                </ChartCard>
-            </div>
+            </ChartCard>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <ChartCard title="تحليل هالك القطع (نفخ vs حقن)" icon={BarChart3} color="bg-royal-600">
+            <ChartCard title="تحليل هالك القطع (نفخ vs حقن)" icon={BarChart3} color="bg-royal-600">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -311,9 +322,9 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </BarChart>
                     </ResponsiveContainer>
                 </div>
-                </ChartCard>
+            </ChartCard>
 
-                <ChartCard title="تحليل أوزان الهالك (نفخ vs حقن)" icon={Weight} color="bg-indigo-600">
+            <ChartCard title="تحليل أوزان الهالك (نفخ vs حقن)" icon={Weight} color="bg-indigo-600">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
@@ -327,9 +338,8 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </BarChart>
                     </ResponsiveContainer>
                 </div>
-                </ChartCard>
-            </div>
-        </>
+            </ChartCard>
+        </div>
       )}
 
       {isModalOpen && (
@@ -396,7 +406,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </div>
                 </div>
 
-                {/* Section: Production Summary */}
                 <div className="bg-indigo-50/40 p-10 rounded-[2.5rem] border border-indigo-100">
                     <h4 className="font-black text-indigo-900 mb-8 flex items-center gap-3 text-lg">
                         <Factory className="w-6 h-6 text-indigo-600" /> ملخص الإنتاج والتحفظ (Production & Reservation)
