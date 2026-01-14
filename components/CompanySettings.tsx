@@ -1,7 +1,8 @@
+
 import React, { useState, useRef } from 'react';
 import { CompanySettings, UserRole } from '../types';
 import { 
-  Building2, MapPin, Phone, Mail, Globe, Upload, Save, 
+  Building2, MapPin, Phone, Mail, Globe, Upload, 
   BadgeCheck, Camera, Award, ShieldCheck, 
   ExternalLink, Edit3, X, Landmark
 } from 'lucide-react';

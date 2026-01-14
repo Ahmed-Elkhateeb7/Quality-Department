@@ -219,7 +219,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
         </div>
       ) : (
         <>
-            {/* New Main KPI Charts: Production & Reserved */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                 <ChartCard title="اتجاه إجمالي الإنتاج الكلي" icon={Factory} color="bg-royal-600">
                 <div className="h-72 w-full">
@@ -330,85 +329,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                 </div>
                 </ChartCard>
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <ChartCard title="مؤشر الهالك في المليون (PPM)" icon={Target} color="bg-indigo-600">
-                <div className="h-72 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
-                        <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="plainline" />
-                        <Line type="monotone" dataKey="internalScrapPpm" name="PPM داخلي" stroke="#e11d48" strokeWidth={4} dot={{ r: 6, fill: '#e11d48', strokeWidth: 3, stroke: '#fff' }} activeDot={{ r: 8 }} />
-                        <Line type="monotone" dataKey="externalScrapPpm" name="PPM خارجي" stroke="#1e40af" strokeWidth={4} dot={{ r: 6, fill: '#1e40af', strokeWidth: 3, stroke: '#fff' }} activeDot={{ r: 8 }} />
-                    </LineChart>
-                    </ResponsiveContainer>
-                </div>
-                </ChartCard>
-
-                <ChartCard title="تطور مخزون المحجوز (سنوياً)" icon={Boxes} color="bg-royal-500">
-                <div className="h-72 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData}>
-                        <defs>
-                        <linearGradient id="gradBlow" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                        </linearGradient>
-                        <linearGradient id="gradInj" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                        </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={600} stroke="#94a3b8" axisLine={false} tickLine={false} />
-                        <YAxis fontSize={12} fontWeight={600} stroke="#94a3b8" axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend iconType="rect" />
-                        <Area type="monotone" dataKey="reservedBlowPieces" name="محجوز نفخ" stroke="#3b82f6" strokeWidth={4} fillOpacity={1} fill="url(#gradBlow)" />
-                        <Area type="monotone" dataKey="reservedInjectionPieces" name="محجوز حقن" stroke="#8b5cf6" strokeWidth={4} fillOpacity={1} fill="url(#gradInj)" />
-                    </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-                </ChartCard>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <ChartCard title="تحليل فاقد الهالك (وزن vs نفخ)" icon={Trash2} color="bg-rose-500">
-                <div className="h-72 w-full">
-                    <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={600} stroke="#94a3b8" axisLine={false} tickLine={false} />
-                        <YAxis fontSize={12} fontWeight={600} stroke="#94a3b8" axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} />
-                        <Legend />
-                        <Bar dataKey="scrappedWeight" name="وزن النفخ الهالك" fill="#fecdd3" radius={[8, 8, 0, 0]} barSize={40} />
-                        <Line type="monotone" dataKey="scrappedBlow" name="عدد النفخ الهالك" stroke="#e11d48" strokeWidth={3} dot={{ r: 6, fill: '#e11d48', strokeWidth: 3, stroke: '#fff' }} activeDot={{ r: 8 }} />
-                    </ComposedChart>
-                    </ResponsiveContainer>
-                </div>
-                </ChartCard>
-
-                <ChartCard title="تقارير عدم المطابقة حسب الورادي" icon={ShieldCheck} color="bg-royal-800">
-                <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }} barGap={8}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                    <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
-                    <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                    <Legend iconType="circle" wrapperStyle={{ paddingTop: '20px' }} />
-                    <Bar dataKey="ncrShift1" name="وردية أ" fill="#0284c7" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="ncrShift2" name="وردية ب" fill="#ef4444" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="ncrShift3" name="وردية ج" fill="#f59e0b" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                </ResponsiveContainer>
-                </div>
-                </ChartCard>
-            </div>
         </>
       )}
 
@@ -476,7 +396,7 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </div>
                 </div>
 
-                {/* New Section: Production Summary */}
+                {/* Section: Production Summary */}
                 <div className="bg-indigo-50/40 p-10 rounded-[2.5rem] border border-indigo-100">
                     <h4 className="font-black text-indigo-900 mb-8 flex items-center gap-3 text-lg">
                         <Factory className="w-6 h-6 text-indigo-600" /> ملخص الإنتاج والتحفظ (Production & Reservation)
@@ -554,48 +474,6 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                             <div className="space-y-3">
                                 <label className="text-sm font-black text-slate-600">PPM خارجي (External)</label>
                                 <input type="number" step="0.01" placeholder="نسبة الهالك الخارجي لكل مليون" value={newData.externalScrapPpm} onChange={(e) => setNewData({...newData, externalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-indigo-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="bg-amber-50/40 p-10 rounded-[2.5rem] border border-amber-100">
-                        <h4 className="font-black text-amber-900 mb-8 flex items-center gap-3 text-lg">
-                            <ShieldCheck className="w-6 h-6 text-amber-600" /> تقارير عدم المطابقة (NCR)
-                        </h4>
-                        <div className="grid grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 text-center block">وردية أ</label>
-                                <input type="number" placeholder="0" value={newData.ncrShift1} onChange={(e) => setNewData({...newData, ncrShift1: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl bg-white border-white outline-none text-center font-bold text-amber-800 shadow-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 text-center block">وردية ب</label>
-                                <input type="number" placeholder="0" value={newData.ncrShift2} onChange={(e) => setNewData({...newData, ncrShift2: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl bg-white border-white outline-none text-center font-bold text-amber-800 shadow-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 text-center block">وردية ج</label>
-                                <input type="number" placeholder="0" value={newData.ncrShift3} onChange={(e) => setNewData({...newData, ncrShift3: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl bg-white border-white outline-none text-center font-bold text-amber-800 shadow-sm" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-emerald-50/40 p-10 rounded-[2.5rem] border border-emerald-100">
-                        <h4 className="font-black text-emerald-900 mb-8 flex items-center gap-3 text-lg">
-                            <ShoppingCart className="w-6 h-6 text-emerald-600" /> بيانات التوريد والشكاوى
-                        </h4>
-                        <div className="grid grid-cols-3 gap-6">
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 block">إجمالي المورد</label>
-                                <input type="number" placeholder="0" value={newData.totalSupplied} onChange={(e) => setNewData({...newData, totalSupplied: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl bg-white border-white outline-none shadow-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 block">إجمالي المرتجع</label>
-                                <input type="number" placeholder="0" value={newData.totalReturned} onChange={(e) => setNewData({...newData, totalReturned: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl bg-white border-white outline-none shadow-sm" />
-                            </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-bold text-slate-500 block">عدد الشكاوى</label>
-                                <input type="number" placeholder="0" value={newData.totalComplaints} onChange={(e) => setNewData({...newData, totalComplaints: Number(e.target.value)})} className="w-full px-4 py-4 rounded-xl bg-white border-white outline-none shadow-sm" />
                             </div>
                         </div>
                     </div>
