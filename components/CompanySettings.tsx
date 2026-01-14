@@ -34,7 +34,7 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
 
   const handleOpenEdit = () => {
     requestAuth(() => {
-      setFormData(settings); // مزامنة البيانات قبل الفتح
+      setFormData(settings);
       setIsEditModalOpen(true);
     });
   };
@@ -106,7 +106,7 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         
-        {/* Profile Card (Sidebar-like) */}
+        {/* Profile Card */}
         <div className="md:col-span-1">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -199,7 +199,6 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
               )}
            </motion.div>
 
-           {/* Informational Banner */}
            <div className="bg-royal-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-xl shadow-royal-900/20">
               <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
@@ -242,4 +241,119 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
                 </button>
               </div>
 
-              <form onSubmit={handleSubmit} className="p-10 overflow-y-auto space-y-
+              <form onSubmit={handleSubmit} className="p-10 overflow-y-auto space-y-8">
+                <div className="flex flex-col items-center mb-10">
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-40 h-40 bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-200 hover:border-royal-500 cursor-pointer relative overflow-hidden group transition-all flex items-center justify-center"
+                  >
+                    {formData.logo ? (
+                      <img src={formData.logo} className="w-full h-full object-contain p-4" alt="Logo" />
+                    ) : (
+                      <div className="flex flex-col items-center text-gray-400 group-hover:text-royal-500">
+                        <Camera className="w-10 h-10 mb-2" />
+                        <span className="text-xs font-bold">رفع الشعار</span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Upload className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                  <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700">اسم المنشأة الرسمية</label>
+                    <input 
+                      required
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700">شعار الجودة (Slogan)</label>
+                    <input 
+                      value={formData.slogan}
+                      onChange={(e) => setFormData({...formData, slogan: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700">رقم السجل التجاري</label>
+                    <input 
+                      value={formData.registrationNumber}
+                      onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold font-mono"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700">البريد الإلكتروني الرسمي</label>
+                    <input 
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => setFormData({...formData, email: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold text-left"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700">أرقام التواصل</label>
+                    <input 
+                      value={formData.phone}
+                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold text-left"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-black text-gray-700">الموقع الإلكتروني</label>
+                    <input 
+                      value={formData.website}
+                      onChange={(e) => setFormData({...formData, website: e.target.value})}
+                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold text-left"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-black text-gray-700">العنوان الرسمي</label>
+                  <input 
+                    value={formData.address}
+                    onChange={(e) => setFormData({...formData, address: e.target.value})}
+                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-black text-gray-700">شهادات الاعتماد (افصل بينها بفاصلة ,)</label>
+                  <textarea 
+                    value={formData.certificates}
+                    onChange={(e) => setFormData({...formData, certificates: e.target.value})}
+                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold min-h-[100px]"
+                    placeholder="ISO 9001, SASO, HACCP..."
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-6">
+                  <button 
+                    type="button" 
+                    onClick={() => setIsEditModalOpen(false)}
+                    className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-black hover:bg-gray-200 transition-all"
+                  >
+                    إلغاء
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="flex-1 py-4 bg-royal-800 text-white rounded-2xl font-black hover:bg-royal-950 transition-all shadow-xl shadow-royal-800/20"
+                  >
+                    حفظ البيانات
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
