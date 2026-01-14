@@ -59,6 +59,9 @@ export interface KPIData {
   totalSupplied: number;
   totalReturned: number;
   totalComplaints: number;
+  // Added Metrics
+  totalProduction: number;
+  totalInternalReserved: number;
 }
 
 export interface CompanySettings {
