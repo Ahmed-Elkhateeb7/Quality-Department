@@ -1,10 +1,9 @@
-
 import React, { useState, useRef } from 'react';
 import { CompanySettings, UserRole } from '../types';
 import { 
   Building2, MapPin, Phone, Mail, Globe, Upload, Save, 
-  BadgeCheck, FileText, Camera, Award, ShieldCheck, 
-  ExternalLink, Edit3, X, Info, Landmark
+  BadgeCheck, Camera, Award, ShieldCheck, 
+  ExternalLink, Edit3, X, Landmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -93,7 +92,6 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
           {isAdmin && (
             <button 
                 onClick={handleOpenEdit}
-                title="تحديث بيانات المنشأة"
                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3 bg-royal-800 text-white rounded-2xl font-black hover:bg-royal-950 transition-all shadow-xl shadow-royal-800/20 active:scale-95"
             >
                 <Edit3 className="w-5 h-5" />
@@ -105,8 +103,6 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
-        {/* Profile Card */}
         <div className="md:col-span-1">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
@@ -116,7 +112,7 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
             <div className="relative group">
                 <div className="w-44 h-44 bg-gray-50 rounded-[2rem] border-2 border-gray-100 shadow-inner flex items-center justify-center mb-6 overflow-hidden">
                 {settings.logo ? (
-                    <img src={settings.logo} alt="Company Logo" className="w-full h-full object-contain p-4 transition-transform group-hover:scale-110" />
+                    <img src={settings.logo} alt="Company Logo" className="w-full h-full object-contain p-4" />
                 ) : (
                     <Building2 className="w-20 h-20 text-gray-200" />
                 )}
@@ -125,22 +121,18 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
                     <button 
                         onClick={handleOpenEdit}
                         className="absolute bottom-4 right-4 p-3 bg-white text-royal-800 rounded-2xl shadow-xl border border-gray-100 opacity-0 group-hover:opacity-100 transition-all hover:bg-royal-50"
-                        title="تحديث الشعار"
                     >
                         <Camera className="w-5 h-5" />
                     </button>
                 )}
             </div>
-
             <h3 className="text-2xl font-black text-gray-900 mb-2">{settings.name || 'اسم المنشأة'}</h3>
             <p className="text-royal-600 font-bold text-sm italic mb-6">"{settings.slogan || 'شعار الجودة الرسمي'}"</p>
-
             <div className="w-full space-y-4 pt-6 border-t border-gray-50">
                <div className="flex flex-col items-center gap-1 p-4 bg-gray-50 rounded-2xl">
                   <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">السجل التجاري</span>
                   <span className="text-royal-800 font-black font-mono text-lg">{settings.registrationNumber || '---'}</span>
                </div>
-               
                {settings.website && (
                  <a href={settings.website} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full py-3 bg-royal-50 text-royal-700 rounded-xl hover:bg-royal-100 transition-all font-bold text-sm">
                     <Globe className="w-4 h-4" />
@@ -152,7 +144,6 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
           </motion.div>
         </div>
 
-        {/* Details and Certificates */}
         <div className="md:col-span-2 space-y-8">
            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <InfoCard icon={Mail} label="البريد الإلكتروني" value={settings.email} colorClass="bg-blue-600" />
@@ -161,7 +152,6 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
               <InfoCard icon={ShieldCheck} label="التراخيص المعتمدة" value={settings.registrationNumber ? 'سجل تجاري نشط' : 'غير محدد'} colorClass="bg-amber-600" />
            </div>
 
-           {/* Certificates Card */}
            <motion.div 
              initial={{ opacity: 0, scale: 0.95 }}
              animate={{ opacity: 1, scale: 1 }}
@@ -174,41 +164,30 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
                 </div>
                 <div>
                     <h4 className="text-xl font-black text-gray-800">الاعتمادات الدولية والمحلية</h4>
-                    <p className="text-gray-400 text-xs font-bold">قائمة شهادات الجودة الموثقة للمنشأة</p>
+                    <p className="text-gray-400 text-xs font-bold">شهادات الجودة الموثقة</p>
                 </div>
               </div>
-              
               {settings.certificates ? (
                 <div className="flex flex-wrap gap-4">
                   {settings.certificates.split(',').map((cert, idx) => (
-                    <div 
-                      key={idx}
-                      className="px-6 py-4 bg-gradient-to-tr from-gray-50 to-white border border-gray-200 rounded-[1.5rem] shadow-sm flex items-center gap-4 hover:border-amber-400 transition-colors group"
-                    >
-                      <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg group-hover:rotate-12 transition-transform">
-                        <BadgeCheck className="w-5 h-5" />
-                      </div>
+                    <div key={idx} className="px-6 py-4 bg-gray-50 border border-gray-200 rounded-[1.5rem] flex items-center gap-4">
+                      <BadgeCheck className="w-5 h-5 text-emerald-600" />
                       <span className="font-black text-gray-700">{cert.trim()}</span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 bg-gray-50 rounded-3xl border-2 border-dashed border-gray-200">
-                  <p className="text-gray-400 font-bold">لم يتم إضافة شهادات اعتماد رسمية بعد</p>
-                </div>
+                <p className="text-center py-8 text-gray-400 font-bold">لا توجد شهادات مضافة</p>
               )}
            </motion.div>
 
-           <div className="bg-royal-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-xl shadow-royal-900/20">
-              <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+           <div className="bg-royal-900 rounded-[2.5rem] p-10 text-white relative overflow-hidden shadow-xl">
               <div className="relative z-10 flex flex-col md:flex-row items-center gap-8">
-                 <div className="p-5 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20">
-                    <ShieldCheck className="w-16 h-16 text-royal-200" />
-                 </div>
+                 <ShieldCheck className="w-16 h-16 text-royal-200" />
                  <div className="text-center md:text-right">
                     <h4 className="text-2xl font-black mb-3">بيانات نظام الجودة (TQM)</h4>
                     <p className="text-royal-100 text-sm leading-relaxed max-w-lg font-medium">
-                      هذه البيانات تُستخدم كمرجع رسمي لتوليد الترويسات (Headers) في التقارير المطبوعة والمستندات الرقمية المعتمدة داخل النظام.
+                      هذه البيانات تُستخدم كمرجع رسمي لتوليد الترويسات في التقارير المطبوعة.
                     </p>
                  </div>
               </div>
@@ -216,7 +195,6 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
         </div>
       </div>
 
-      {/* Edit Modal */}
       <AnimatePresence>
         {isEditModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-royal-950/60 backdrop-blur-md p-4">
@@ -233,10 +211,9 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
                   </div>
                   <div>
                     <h3 className="text-2xl font-black text-gray-800">تعديل بيانات المنشأة</h3>
-                    <p className="text-gray-500 text-sm">أدخل البيانات الرسمية بدقة لتحديث الهوية الرقمية</p>
                   </div>
                 </div>
-                <button onClick={() => setIsEditModalOpen(false)} className="p-3 hover:bg-red-50 text-gray-400 hover:text-red-500 rounded-2xl transition-all border border-transparent hover:border-red-100">
+                <button onClick={() => setIsEditModalOpen(false)} className="text-gray-400 hover:text-red-500">
                   <X className="w-8 h-8" />
                 </button>
               </div>
@@ -245,109 +222,52 @@ export const CompanySettingsPanel: React.FC<CompanySettingsProps> = ({ settings,
                 <div className="flex flex-col items-center mb-10">
                   <div 
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-40 h-40 bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-200 hover:border-royal-500 cursor-pointer relative overflow-hidden group transition-all flex items-center justify-center"
+                    className="w-40 h-40 bg-gray-50 rounded-[2.5rem] border-4 border-dashed border-gray-200 hover:border-royal-500 cursor-pointer relative overflow-hidden flex items-center justify-center"
                   >
                     {formData.logo ? (
                       <img src={formData.logo} className="w-full h-full object-contain p-4" alt="Logo" />
                     ) : (
-                      <div className="flex flex-col items-center text-gray-400 group-hover:text-royal-500">
+                      <div className="flex flex-col items-center text-gray-400">
                         <Camera className="w-10 h-10 mb-2" />
                         <span className="text-xs font-bold">رفع الشعار</span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Upload className="w-8 h-8 text-white" />
-                    </div>
                   </div>
                   <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700">اسم المنشأة الرسمية</label>
-                    <input 
-                      required
-                      value={formData.name}
-                      onChange={(e) => setFormData({...formData, name: e.target.value})}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold"
-                    />
+                    <label className="text-sm font-black text-gray-700">الاسم الرسمي</label>
+                    <input required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700">شعار الجودة (Slogan)</label>
-                    <input 
-                      value={formData.slogan}
-                      onChange={(e) => setFormData({...formData, slogan: e.target.value})}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold"
-                    />
+                    <label className="text-sm font-black text-gray-700">شعار الجودة</label>
+                    <input value={formData.slogan} onChange={(e) => setFormData({...formData, slogan: e.target.value})} className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700">رقم السجل التجاري</label>
-                    <input 
-                      value={formData.registrationNumber}
-                      onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold font-mono"
-                    />
+                    <label className="text-sm font-black text-gray-700">رقم السجل</label>
+                    <input value={formData.registrationNumber} onChange={(e) => setFormData({...formData, registrationNumber: e.target.value})} className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none font-bold" />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700">البريد الإلكتروني الرسمي</label>
-                    <input 
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({...formData, email: e.target.value})}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold text-left"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700">أرقام التواصل</label>
-                    <input 
-                      value={formData.phone}
-                      onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold text-left"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-black text-gray-700">الموقع الإلكتروني</label>
-                    <input 
-                      value={formData.website}
-                      onChange={(e) => setFormData({...formData, website: e.target.value})}
-                      className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold text-left"
-                    />
+                    <label className="text-sm font-black text-gray-700">البريد الإلكتروني</label>
+                    <input type="email" value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none font-bold" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-700">العنوان الرسمي</label>
-                  <input 
-                    value={formData.address}
-                    onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold"
-                  />
+                  <label className="text-sm font-black text-gray-700">العنوان</label>
+                  <input value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none font-bold" />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-black text-gray-700">شهادات الاعتماد (افصل بينها بفاصلة ,)</label>
-                  <textarea 
-                    value={formData.certificates}
-                    onChange={(e) => setFormData({...formData, certificates: e.target.value})}
-                    className="w-full px-5 py-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-royal-500/10 outline-none font-bold min-h-[100px]"
-                    placeholder="ISO 9001, SASO, HACCP..."
-                  />
+                  <label className="text-sm font-black text-gray-700">الشهادات (افصل بفاصلة ,)</label>
+                  <textarea value={formData.certificates} onChange={(e) => setFormData({...formData, certificates: e.target.value})} className="w-full px-5 py-4 rounded-2xl border border-gray-200 outline-none font-bold min-h-[100px]" />
                 </div>
 
                 <div className="flex gap-4 pt-6">
-                  <button 
-                    type="button" 
-                    onClick={() => setIsEditModalOpen(false)}
-                    className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-black hover:bg-gray-200 transition-all"
-                  >
-                    إلغاء
-                  </button>
-                  <button 
-                    type="submit" 
-                    className="flex-1 py-4 bg-royal-800 text-white rounded-2xl font-black hover:bg-royal-950 transition-all shadow-xl shadow-royal-800/20"
-                  >
-                    حفظ البيانات
-                  </button>
+                  <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-4 bg-gray-100 text-gray-700 rounded-2xl font-black">إلغاء</button>
+                  <button type="submit" className="flex-1 py-4 bg-royal-800 text-white rounded-2xl font-black shadow-xl">حفظ</button>
                 </div>
               </form>
             </motion.div>
