@@ -8,7 +8,8 @@ import {
 import { 
   FileSpreadsheet, Plus, X, Boxes, Trash2, ShoppingCart, 
   ShieldCheck, Activity, History, MessageSquareWarning,
-  ChevronRight, ChevronLeft, Target, Calendar, BarChart3, Weight, Factory, AlertCircle, TrendingUp
+  ChevronRight, ChevronLeft, Target, Calendar, BarChart3, Weight, Factory, AlertCircle, TrendingUp,
+  Clock, Zap, FileDown
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -34,7 +35,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         {payload.map((entry: any, index: number) => (
           <div key={index} className="flex items-center justify-between gap-6 text-sm py-1.5">
             <span style={{ color: entry.color }} className="font-black text-base">
-              {entry.value.toLocaleString()} {entry.name.includes('وزن') ? 'كجم' : 'قطعة'}
+              {entry.value.toLocaleString()} {entry.name.includes('وزن') ? 'كجم' : (entry.name.includes('معدل') ? '%' : 'قطعة/تقرير')}
             </span>
             <span className="text-slate-300 font-medium">{entry.name}</span>
           </div>
@@ -103,21 +104,21 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
   const handleExportCSV = () => {
     const headers = [
       'الشهر', 'السنة', 'نسبة الجودة %', 'عدد العيوب', 'إجمالي الإنتاج', 'إجمالي المحجوز الداخلي',
+      'NCR وردية أ', 'NCR وردية ب', 'NCR وردية ج',
+      'PPM داخلي', 'PPM خارجي',
       'محجوز نفخ (قطعة)', 'محجوز نفخ (وزن)', 
       'محجوز حقن (قطعة)', 'محجوز حقن (وزن)', 
       'هالك نفخ (قطعة)', 'هالك نفخ (وزن)', 'هالك حقن (قطعة)', 'هالك حقن (وزن)',
-      'هالك PPM داخلي', 'هالك PPM خارجي',
-      'عدم مطابقة وردية أ', 'عدم مطابقة وردية ب', 'عدم مطابقة وردية ج', 
       'إجمالي المورد', 'إجمالي المرتجع', 'إجمالي الشكاوى'
     ];
     
     const csvRows = data.map(d => [
       d.month, d.year, d.qualityRate, d.defects, d.totalProduction, d.totalInternalReserved,
+      d.ncrShift1, d.ncrShift2, d.ncrShift3,
+      d.internalScrapPpm, d.externalScrapPpm,
       d.reservedBlowPieces, d.reservedBlowWeight,
       d.reservedInjectionPieces, d.reservedInjectionWeight,
       d.scrappedBlow, d.scrappedWeight, d.scrappedInjection, d.scrappedPieces,
-      d.internalScrapPpm, d.externalScrapPpm,
-      d.ncrShift1, d.ncrShift2, d.ncrShift3,
       d.totalSupplied, d.totalReturned, d.totalComplaints
     ]);
 
@@ -130,7 +131,7 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `KPI_Analytics_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `KPI_TQM_Analytics_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -210,7 +211,7 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                 onClick={handleExportCSV}
                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-8 py-3.5 bg-royal-800 text-white rounded-2xl hover:bg-royal-900 transition-all shadow-xl shadow-royal-800/30 font-bold"
             >
-                <FileSpreadsheet className="w-5 h-5" />
+                <FileDown className="w-5 h-5" />
                 تصدير CSV
             </button>
         </div>
@@ -259,15 +260,40 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </ComposedChart>
                     </ResponsiveContainer>
                 </div>
-                <div className="mt-6 p-4 bg-slate-50 rounded-2xl flex flex-wrap gap-6 justify-center text-sm font-bold text-slate-600">
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-royal-600"></div>
-                        <span>الإنتاج المستهدف والكلي</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-amber-500"></div>
-                        <span>حجم الهالك/المحجوز الفعلي</span>
-                    </div>
+            </ChartCard>
+
+            {/* NEW: NCR Shift Chart */}
+            <ChartCard title="تقارير عدم المطابقة حسب الورديات (NCR)" icon={Zap} color="bg-amber-500" fullWidth={true}>
+                <div className="h-80 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
+                        <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                        <Bar dataKey="ncrShift1" name="وردية أ" fill="#3b82f6" radius={[4, 4, 0, 0]} barSize={20} />
+                        <Bar dataKey="ncrShift2" name="وردية ب" fill="#10b981" radius={[4, 4, 0, 0]} barSize={20} />
+                        <Bar dataKey="ncrShift3" name="وردية ج" fill="#f59e0b" radius={[4, 4, 0, 0]} barSize={20} />
+                    </BarChart>
+                    </ResponsiveContainer>
+                </div>
+            </ChartCard>
+
+            {/* NEW: Scrap PPM Chart */}
+            <ChartCard title="مؤشرات الهالك PPM (داخلي وخارجي)" icon={Target} color="bg-rose-600">
+                <div className="h-72 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                        <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
+                        <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} />
+                        <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
+                        <Line type="monotone" dataKey="internalScrapPpm" name="PPM داخلي" stroke="#e11d48" strokeWidth={3} dot={{ r: 6 }} />
+                        <Line type="monotone" dataKey="externalScrapPpm" name="PPM خارجي" stroke="#1e40af" strokeWidth={3} dot={{ r: 6 }} />
+                    </LineChart>
+                    </ResponsiveContainer>
                 </div>
             </ChartCard>
 
@@ -406,42 +432,69 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                     </div>
                 </div>
 
+                {/* Section: NCR Shift Reports */}
+                <div className="bg-amber-50/40 p-10 rounded-[2.5rem] border border-amber-100">
+                    <h4 className="font-black text-amber-900 mb-8 flex items-center gap-3 text-lg">
+                        <Zap className="w-6 h-6 text-amber-600" /> تقارير عدم المطابقة حسب الوردية (NCR)
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div className="space-y-2">
+                            <label className="text-sm font-black text-slate-700 flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-blue-500" /> وردية أ
+                            </label>
+                            <input type="number" placeholder="0" value={newData.ncrShift1} onChange={(e) => setNewData({...newData, ncrShift1: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-blue-500/10 font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-black text-slate-700 flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-emerald-500" /> وردية ب
+                            </label>
+                            <input type="number" placeholder="0" value={newData.ncrShift2} onChange={(e) => setNewData({...newData, ncrShift2: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-emerald-500/10 font-bold" />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-sm font-black text-slate-700 flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-amber-500" /> وردية ج
+                            </label>
+                            <input type="number" placeholder="0" value={newData.ncrShift3} onChange={(e) => setNewData({...newData, ncrShift3: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-amber-500/10 font-bold" />
+                        </div>
+                    </div>
+                </div>
+
                 <div className="bg-indigo-50/40 p-10 rounded-[2.5rem] border border-indigo-100">
                     <h4 className="font-black text-indigo-900 mb-8 flex items-center gap-3 text-lg">
-                        <Factory className="w-6 h-6 text-indigo-600" /> ملخص الإنتاج والتحفظ (Production & Reservation)
+                        <Factory className="w-6 h-6 text-indigo-600" /> ملخص الإنتاج والتحفظ
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-2">
                             <label className="text-sm font-black text-slate-700 mr-1">إجمالي الإنتاجيات</label>
-                            <input type="number" placeholder="أدخل إجمالي القطع المنتجة" value={newData.totalProduction} onChange={(e) => setNewData({...newData, totalProduction: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-indigo-500/10 font-bold text-indigo-800" />
+                            <input type="number" placeholder="0" value={newData.totalProduction} onChange={(e) => setNewData({...newData, totalProduction: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-indigo-500/10 font-bold text-indigo-800" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-black text-slate-700 mr-1">إجمالي المحجوزات الداخلية</label>
-                            <input type="number" placeholder="أدخل إجمالي القطع المتحفظ عليها" value={newData.totalInternalReserved} onChange={(e) => setNewData({...newData, totalInternalReserved: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-amber-500/10 font-bold text-amber-800" />
+                            <input type="number" placeholder="0" value={newData.totalInternalReserved} onChange={(e) => setNewData({...newData, totalInternalReserved: Number(e.target.value)})} className="w-full px-5 py-4 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-amber-500/10 font-bold text-amber-800" />
                         </div>
                     </div>
                 </div>
 
                 <div className="bg-royal-50/40 p-10 rounded-[2.5rem] border border-royal-100">
                     <h4 className="font-black text-royal-900 mb-8 flex items-center gap-3 text-lg">
-                        <Boxes className="w-6 h-6 text-royal-600" /> تفاصيل الإنتاج المحجوز (Reserved Details)
+                        <Boxes className="w-6 h-6 text-royal-600" /> تفاصيل الإنتاج المحجوز
                     </h4>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-500 mr-1">عدد النفخ</label>
-                            <input type="number" placeholder="0" value={newData.reservedBlowPieces} onChange={(e) => setNewData({...newData, reservedBlowPieces: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-royal-500/10" />
+                            <input type="number" value={newData.reservedBlowPieces} onChange={(e) => setNewData({...newData, reservedBlowPieces: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-500 mr-1">وزن النفخ</label>
-                            <input type="number" step="0.01" placeholder="0.00" value={newData.reservedBlowWeight} onChange={(e) => setNewData({...newData, reservedBlowWeight: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-royal-500/10" />
+                            <input type="number" step="0.01" value={newData.reservedBlowWeight} onChange={(e) => setNewData({...newData, reservedBlowWeight: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-500 mr-1">عدد الحقن</label>
-                            <input type="number" placeholder="0" value={newData.reservedInjectionPieces} onChange={(e) => setNewData({...newData, reservedInjectionPieces: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-royal-500/10" />
+                            <input type="number" value={newData.reservedInjectionPieces} onChange={(e) => setNewData({...newData, reservedInjectionPieces: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none" />
                         </div>
                         <div className="space-y-2">
                             <label className="text-xs font-bold text-slate-500 mr-1">وزن الحقن</label>
-                            <input type="number" step="0.01" placeholder="0.00" value={newData.reservedInjectionWeight} onChange={(e) => setNewData({...newData, reservedInjectionWeight: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none focus:ring-4 focus:ring-royal-500/10" />
+                            <input type="number" step="0.01" value={newData.reservedInjectionWeight} onChange={(e) => setNewData({...newData, reservedInjectionWeight: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl border border-white bg-white shadow-sm outline-none" />
                         </div>
                     </div>
                 </div>
@@ -454,19 +507,19 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                         <div className="grid grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 mr-1">عدد النفخ</label>
-                                <input type="number" placeholder="0" value={newData.scrappedBlow} onChange={(e) => setNewData({...newData, scrappedBlow: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none shadow-sm" />
+                                <input type="number" value={newData.scrappedBlow} onChange={(e) => setNewData({...newData, scrappedBlow: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 mr-1">وزن النفخ</label>
-                                <input type="number" step="0.01" placeholder="0.00" value={newData.scrappedWeight} onChange={(e) => setNewData({...newData, scrappedWeight: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none shadow-sm" />
+                                <input type="number" step="0.01" value={newData.scrappedWeight} onChange={(e) => setNewData({...newData, scrappedWeight: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 mr-1">عدد الحقن</label>
-                                <input type="number" placeholder="0" value={newData.scrappedInjection} onChange={(e) => setNewData({...newData, scrappedInjection: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none shadow-sm" />
+                                <input type="number" value={newData.scrappedInjection} onChange={(e) => setNewData({...newData, scrappedInjection: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none" />
                             </div>
                             <div className="space-y-2">
                                 <label className="text-xs font-bold text-slate-500 mr-1">وزن الحقن</label>
-                                <input type="number" step="0.01" placeholder="0.00" value={newData.scrappedPieces} onChange={(e) => setNewData({...newData, scrappedPieces: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none shadow-sm" />
+                                <input type="number" step="0.01" value={newData.scrappedPieces} onChange={(e) => setNewData({...newData, scrappedPieces: Number(e.target.value)})} className="w-full px-5 py-3.5 rounded-xl bg-white border-white outline-none" />
                             </div>
                         </div>
                     </div>
@@ -478,11 +531,11 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                         <div className="grid grid-cols-1 gap-8 h-full justify-center">
                             <div className="space-y-3">
                                 <label className="text-sm font-black text-slate-600">PPM داخلي (Internal)</label>
-                                <input type="number" step="0.01" placeholder="نسبة الهالك الداخلي لكل مليون" value={newData.internalScrapPpm} onChange={(e) => setNewData({...newData, internalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-rose-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
+                                <input type="number" step="0.01" placeholder="PPM..." value={newData.internalScrapPpm} onChange={(e) => setNewData({...newData, internalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-rose-600 shadow-md focus:ring-4 focus:ring-indigo-500/10" />
                             </div>
                             <div className="space-y-3">
                                 <label className="text-sm font-black text-slate-600">PPM خارجي (External)</label>
-                                <input type="number" step="0.01" placeholder="نسبة الهالك الخارجي لكل مليون" value={newData.externalScrapPpm} onChange={(e) => setNewData({...newData, externalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-indigo-600 shadow-md focus:ring-4 focus:ring-indigo-500/10 transition-all" />
+                                <input type="number" step="0.01" placeholder="PPM..." value={newData.externalScrapPpm} onChange={(e) => setNewData({...newData, externalScrapPpm: Number(e.target.value)})} className="w-full px-6 py-4 rounded-2xl bg-white border-white outline-none font-bold text-indigo-600 shadow-md focus:ring-4 focus:ring-indigo-500/10" />
                             </div>
                         </div>
                     </div>
