@@ -225,44 +225,36 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Combined Production & Reserved Chart */}
+            {/* NEW: Production vs Reserved Bar Chart (Was Composed) */}
             <ChartCard title="تحليل كفاءة الإنتاج مقابل المحجوزات" icon={TrendingUp} color="bg-royal-600" fullWidth={true}>
                 <div className="h-96 w-full">
                     <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
-                        <defs>
-                            <linearGradient id="gradProd" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#1e40af" stopOpacity={0.3}/>
-                                <stop offset="95%" stopColor="#1e40af" stopOpacity={0}/>
-                            </linearGradient>
-                        </defs>
+                    <BarChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                         <XAxis dataKey="displayLabel" fontSize={11} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
                         <YAxis fontSize={12} fontWeight={700} stroke="#64748b" axisLine={false} tickLine={false} />
                         <Tooltip content={<CustomTooltip />} />
                         <Legend wrapperStyle={{ paddingTop: '20px', fontWeight: 'bold' }} />
-                        <Area 
-                            type="monotone" 
+                        <Bar 
                             dataKey="totalProduction" 
                             name="إجمالي الإنتاج" 
-                            stroke="#1e40af" 
-                            strokeWidth={4} 
-                            fillOpacity={1} 
-                            fill="url(#gradProd)" 
+                            fill="#1e40af" 
+                            radius={[6, 6, 0, 0]} 
+                            barSize={30} 
                         />
                         <Bar 
                             dataKey="totalInternalReserved" 
                             name="المحجوز الداخلي" 
                             fill="#f59e0b" 
                             radius={[6, 6, 0, 0]} 
-                            barSize={40} 
+                            barSize={30} 
                         />
-                    </ComposedChart>
+                    </BarChart>
                     </ResponsiveContainer>
                 </div>
             </ChartCard>
 
-            {/* NEW: NCR Shift Chart */}
+            {/* NCR Shift Chart */}
             <ChartCard title="تقارير عدم المطابقة حسب الورديات (NCR)" icon={Zap} color="bg-amber-500" fullWidth={true}>
                 <div className="h-80 w-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -280,7 +272,7 @@ export const KPIs: React.FC<KPIProps> = ({ data, setData, requestAuth, role }) =
                 </div>
             </ChartCard>
 
-            {/* NEW: Scrap PPM Chart */}
+            {/* Scrap PPM Chart */}
             <ChartCard title="مؤشرات الهالك PPM (داخلي وخارجي)" icon={Target} color="bg-rose-600">
                 <div className="h-72 w-full">
                     <ResponsiveContainer width="100%" height="100%">
